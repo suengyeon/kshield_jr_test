@@ -1,0 +1,22 @@
+version: "3.9"
+
+services:
+  cloudsec-app:
+    build: .
+    container_name: cloudsec-corp-app
+    ports:
+      - "5000:5000"
+    volumes:
+      - type: bind
+        source: ${USERPROFILE}/.aws
+        target: /home/appuser/.aws
+        read_only: true
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+      - AWS_DEFAULT_REGION=ap-northeast-2
+      - S3_BUCKET_NAME=cloudsec-corp-storage-0501
+      - FLASK_SECRET_KEY=change-this-secret
+      - APP_DEFAULT_USERNAME=admin
+      - APP_DEFAULT_PASSWORD=ChangeMe123!
+    restart: unless-stopped
