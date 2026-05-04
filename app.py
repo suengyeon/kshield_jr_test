@@ -25,7 +25,9 @@ from werkzeug.utils import secure_filename
 
 
 BASE_DIR = Path(__file__).resolve().parent
-DB_PATH = BASE_DIR / "metadata.db"
+INSTANCE_DIR = BASE_DIR / "instance"
+INSTANCE_DIR.mkdir(parents=True, exist_ok=True)
+DB_PATH = INSTANCE_DIR / "metadata.db"
 BUCKET_NAME = os.getenv("S3_BUCKET_NAME", "cloudsec-corp-storage-0501")
 REGION = os.getenv("AWS_DEFAULT_REGION", "ap-northeast-2")
 DEFAULT_USERNAME = os.getenv("APP_DEFAULT_USERNAME", "admin")
