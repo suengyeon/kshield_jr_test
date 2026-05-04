@@ -1,5 +1,7 @@
 import os
 import sqlite3
+import json
+import logging
 from datetime import datetime
 from functools import wraps
 from pathlib import Path
@@ -9,6 +11,7 @@ import boto3
 from flask import (
     Flask,
     Response,
+    abort,
     flash,
     g,
     redirect,
@@ -27,9 +30,17 @@ BUCKET_NAME = os.getenv("S3_BUCKET_NAME", "cloudsec-corp-storage-0501")
 REGION = os.getenv("AWS_DEFAULT_REGION", "ap-northeast-2")
 DEFAULT_USERNAME = os.getenv("APP_DEFAULT_USERNAME", "admin")
 DEFAULT_PASSWORD = os.getenv("APP_DEFAULT_PASSWORD", "ChangeMe123!")
+AUDIT_LOG_PATH = BASE_DIR / "security_audit.log"
 
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-secret-change-me")
+
+# 보안 감사 로그 설정
+audit_logger = logging.getLogger("audit")
+audit_logger.setLevel(logging.INFO)
+audit_handler = logging.FileHandler(AUDIT_LOG_PATH)
+audit_handler.setFormatter(logging.Formatter("%(message)s"))
+audit_logger.addHandler(audit_handler)
 
 
 def get_s3_client():
@@ -58,7 +69,9 @@ def init_db():
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL
+            password_hash TEXT NOT NULL,
+            role TEXT NOT NULL DEFAULT 'user',
+            level INTEGER NOT NULL DEFAULT 1
         )
         """
     )
@@ -72,6 +85,7 @@ def init_db():
             s3_key TEXT UNIQUE NOT NULL,
             size_bytes INTEGER NOT NULL,
             uploaded_at TEXT NOT NULL,
+            target_levels TEXT NOT NULL DEFAULT '1',
             FOREIGN KEY(owner_id) REFERENCES users(id),
             FOREIGN KEY(uploaded_by) REFERENCES users(id)
         )
@@ -81,14 +95,53 @@ def init_db():
     if "uploaded_by" not in columns:
         cursor.execute("ALTER TABLE files ADD COLUMN uploaded_by INTEGER")
         cursor.execute("UPDATE files SET uploaded_by = owner_id WHERE uploaded_by IS NULL")
+    if "required_level" not in columns:
+        cursor.execute("ALTER TABLE files ADD COLUMN required_level INTEGER NOT NULL DEFAULT 1")
+        if "min_level" in columns:
+            cursor.execute("UPDATE files SET required_level = min_level")
+    if "allow_lower" in columns:
+        # Migrate from allow_lower to target_levels
+        all_files = cursor.execute("SELECT id, required_level, allow_lower FROM files").fetchall()
+        for file_row in all_files:
+            required_level = file_row[1]
+            allow_lower = file_row[2]
+            if allow_lower:
+                # allow_lower가 True면 1부터 required_level까지 모두 허용
+                target_levels = ",".join(str(l) for l in range(1, required_level + 1))
+            else:
+                # allow_lower가 False면 required_level만 허용
+                target_levels = str(required_level)
+            cursor.execute("UPDATE files SET target_levels = ? WHERE id = ?", (target_levels, file_row[0]))
+        cursor.execute("ALTER TABLE files DROP COLUMN allow_lower")
+    if "target_levels" not in columns:
+        cursor.execute("ALTER TABLE files ADD COLUMN target_levels TEXT NOT NULL DEFAULT '1'")
+    if "required_level" in columns and "target_levels" in columns:
+        # Make sure all files have target_levels set
+        cursor.execute("UPDATE files SET target_levels = CAST(required_level AS TEXT) WHERE target_levels IS NULL")
 
-    user = cursor.execute(
+    # Check if role and level columns exist in users table
+    user_columns = {row[1] for row in cursor.execute("PRAGMA table_info(users)").fetchall()}
+    if "role" not in user_columns:
+        cursor.execute("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'")
+    if "level" not in user_columns:
+        cursor.execute("ALTER TABLE users ADD COLUMN level INTEGER NOT NULL DEFAULT 1")
+
+    default_user = cursor.execute(
         "SELECT id FROM users WHERE username = ?", (DEFAULT_USERNAME,)
     ).fetchone()
-    if not user:
+    if not default_user:
         cursor.execute(
-            "INSERT INTO users (username, password_hash) VALUES (?, ?)",
-            (DEFAULT_USERNAME, generate_password_hash(DEFAULT_PASSWORD)),
+            "INSERT INTO users (username, password_hash, role, level) VALUES (?, ?, ?, ?)",
+            (DEFAULT_USERNAME, generate_password_hash(DEFAULT_PASSWORD), "admin", 3),
+        )
+
+    admin_user = cursor.execute(
+        "SELECT id FROM users WHERE username = 'admin'"
+    ).fetchone()
+    if not admin_user:
+        cursor.execute(
+            "INSERT INTO users (username, password_hash, role, level) VALUES (?, ?, ?, ?)",
+            ("admin", generate_password_hash(DEFAULT_PASSWORD), "admin", 3),
         )
     db.commit()
     db.close()
@@ -104,18 +157,110 @@ def login_required(view_func):
     return wrapped
 
 
+def admin_required(view_func):
+    @wraps(view_func)
+    def wrapped(*args, **kwargs):
+        if session.get("level") != 3:
+            abort(403)
+        return view_func(*args, **kwargs)
+
+    return wrapped
+
+
 @app.route("/")
 @login_required
 def index():
     db = get_db()
-    files = db.execute(
+    all_files = db.execute(
         """
-        SELECT id, uploaded_by, original_name, size_bytes, uploaded_at
-        FROM files
-        ORDER BY uploaded_at DESC
+        SELECT f.id,
+               f.owner_id,
+               f.original_name,
+               f.size_bytes,
+               f.uploaded_at,
+               f.target_levels,
+               u.username AS uploaded_by_username
+        FROM files f
+        LEFT JOIN users u ON f.uploaded_by = u.id
+        ORDER BY f.uploaded_at DESC
         """
     ).fetchall()
-    return render_template("index.html", files=files, username=session["username"])
+
+    # 사용자의 권한에 따라 파일 필터링
+    user_level = session.get("level", 1)
+    user_id = session.get("user_id")
+    filtered_files = []
+
+    for file in all_files:
+        has_access = False
+        if file["owner_id"] == user_id:
+            # 파일 소유자인 경우
+            has_access = True
+        elif session.get("role") == "admin":
+            # 관리자인 경우
+            has_access = True
+        else:
+            # target_levels에 포함되는지 확인
+            target_levels = [int(l.strip()) for l in file["target_levels"].split(",")]
+            if user_level in target_levels:
+                has_access = True
+
+        if has_access:
+            filtered_files.append(file)
+
+    return render_template("index.html", files=filtered_files, username=session["username"])
+
+
+@app.route("/admin/users", methods=["GET", "POST"])
+@login_required
+@admin_required
+def admin_users():
+    db = get_db()
+    if request.method == "POST":
+        target_id = request.form.get("user_id", type=int)
+        new_level = request.form.get("new_level", type=int)
+
+        if target_id is None or new_level is None or new_level not in (1, 2, 3):
+            flash("유효한 레벨을 선택해주세요.", "danger")
+            return redirect(url_for("admin_users"))
+
+        user_row = db.execute(
+            "SELECT id, username, level FROM users WHERE id = ?",
+            (target_id,),
+        ).fetchone()
+        if not user_row:
+            flash("사용자를 찾을 수 없습니다.", "danger")
+            return redirect(url_for("admin_users"))
+
+        db.execute(
+            "UPDATE users SET level = ? WHERE id = ?",
+            (new_level, target_id),
+        )
+        db.commit()
+
+        audit_log = {
+            "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
+            "event": "ADMIN_ACTION: USER_LEVEL_CHANGED",
+            "admin": session.get("username"),
+            "target_user_id": target_id,
+            "target_username": user_row["username"],
+            "new_level": new_level,
+        }
+        audit_logger.info(json.dumps(audit_log, ensure_ascii=False))
+
+        flash(f"{user_row['username']}님의 레벨이 {new_level}로 변경되었습니다.", "success")
+        return redirect(url_for("admin_users"))
+
+    users = db.execute(
+        "SELECT id, username, level FROM users ORDER BY id ASC"
+    ).fetchall()
+
+    # 레벨별로 그룹화
+    users_by_level = {}
+    for level in [1, 2, 3]:
+        users_by_level[level] = [user for user in users if user["level"] == level]
+
+    return render_template("admin_users.html", users_by_level=users_by_level)
 
 
 @app.route("/upload", methods=["POST"])
@@ -148,12 +293,39 @@ def upload():
         flash("S3 업로드 중 오류가 발생했습니다.", "danger")
         return redirect(url_for("index"))
 
+    # 접근 허용 레벨 수집
+    user_level = session.get("level", 1)
+    selected_levels = []
+    for level in range(1, 4):
+        if request.form.get(f"level_{level}") == "on":
+            selected_levels.append(level)
+
+    if not selected_levels:
+        flash("접근 허용 레벨을 최소 하나 이상 선택해주세요.", "danger")
+        return redirect(url_for("index"))
+
+    # 사용자가 자신의 레벨보다 높은 레벨을 선택했는지 확인
+    if any(level > user_level for level in selected_levels):
+        audit_log = {
+            "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
+            "event": "UNLAWFUL_LEVEL_ASSIGNMENT",
+            "username": session.get("username"),
+            "user_level": user_level,
+            "requested_levels": ",".join(str(l) for l in selected_levels),
+            "file_name": filename,
+        }
+        audit_logger.critical(json.dumps(audit_log, ensure_ascii=False))
+        flash("자신의 권한보다 높은 레벨을 선택할 수 없습니다.", "danger")
+        return redirect(url_for("index"))
+
+    target_levels = ",".join(str(l) for l in selected_levels)
+
     uploaded_at = datetime.utcnow().isoformat(timespec="seconds")
     db = get_db()
     db.execute(
         """
-        INSERT INTO files (owner_id, uploaded_by, original_name, s3_key, size_bytes, uploaded_at)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO files (owner_id, uploaded_by, original_name, s3_key, size_bytes, uploaded_at, target_levels)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         """,
         (
             session["user_id"],
@@ -162,6 +334,7 @@ def upload():
             s3_key,
             file_size,
             uploaded_at,
+            target_levels,
         ),
     )
     db.commit()
@@ -180,15 +353,45 @@ def download():
     db = get_db()
     file_row = db.execute(
         """
-        SELECT original_name, s3_key
+        SELECT id, original_name, s3_key, target_levels, owner_id
         FROM files
-        WHERE id = ? AND owner_id = ?
+        WHERE id = ?
         """,
-        (file_id, session["user_id"]),
+        (file_id,),
     ).fetchone()
     if not file_row:
-        flash("파일 접근 권한이 없습니다.", "danger")
+        flash("잘못된 요청입니다.", "danger")
         return redirect(url_for("index"))
+
+    user_level = session.get("level", 1)
+    user_id = session.get("user_id")
+    is_admin = session.get("role") == "admin"
+
+    # 권한 검증 로직
+    has_access = False
+    if file_row["owner_id"] == user_id:
+        # 파일 소유자인 경우
+        has_access = True
+    elif is_admin:
+        # 관리자인 경우
+        has_access = True
+    else:
+        # target_levels에 포함되는지 확인
+        target_levels = [int(l.strip()) for l in file_row["target_levels"].split(",")]
+        if user_level in target_levels:
+            has_access = True
+
+    if not has_access:
+        audit_log = {
+            "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
+            "event": "SECURITY: GRANULAR_ACL_REJECTION",
+            "username": session.get("username"),
+            "user_level": user_level,
+            "allowed_levels": file_row["target_levels"],
+            "file_id": file_row["id"],
+        }
+        audit_logger.warning(json.dumps(audit_log, ensure_ascii=False))
+        abort(403)
 
     try:
         s3_obj = get_s3_client().get_object(Bucket=BUCKET_NAME, Key=file_row["s3_key"])
@@ -219,14 +422,18 @@ def delete():
     db = get_db()
     file_row = db.execute(
         """
-        SELECT id, s3_key
+        SELECT id, s3_key, owner_id
         FROM files
-        WHERE id = ? AND owner_id = ?
+        WHERE id = ?
         """,
-        (file_id, session["user_id"]),
+        (file_id,),
     ).fetchone()
     if not file_row:
-        flash("파일 접근 권한이 없습니다.", "danger")
+        flash("파일을 찾을 수 없습니다.", "danger")
+        return redirect(url_for("index"))
+
+    if file_row["owner_id"] != session["user_id"] and session.get("role") != "admin":
+        flash("삭제 권한이 없습니다.", "danger")
         return redirect(url_for("index"))
 
     try:
@@ -248,7 +455,7 @@ def login():
         password = request.form.get("password", "")
         db = get_db()
         user = db.execute(
-            "SELECT id, username, password_hash FROM users WHERE username = ?",
+            "SELECT id, username, password_hash, role, level FROM users WHERE username = ?",
             (username,),
         ).fetchone()
 
@@ -259,9 +466,71 @@ def login():
         session.clear()
         session["user_id"] = user["id"]
         session["username"] = user["username"]
+        session["role"] = user["role"]
+        session["level"] = user["level"]
         return redirect(url_for("index"))
 
     return render_template("login.html")
+
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "").strip()
+        password_confirm = request.form.get("password_confirm", "").strip()
+
+        # Validation
+        if not username or not password:
+            flash("아이디와 비밀번호를 입력해주세요.", "danger")
+            return render_template("signup.html")
+
+        if len(username) < 3:
+            flash("아이디는 최소 3글자 이상이어야 합니다.", "danger")
+            return render_template("signup.html")
+
+        if len(password) < 6:
+            flash("비밀번호는 최소 6글자 이상이어야 합니다.", "danger")
+            return render_template("signup.html")
+
+        if password != password_confirm:
+            flash("비밀번호가 일치하지 않습니다.", "danger")
+            return render_template("signup.html")
+
+        db = get_db()
+        existing_user = db.execute(
+            "SELECT id FROM users WHERE username = ?", (username,)
+        ).fetchone()
+
+        if existing_user:
+            flash("이미 존재하는 아이디입니다.", "danger")
+            return render_template("signup.html")
+
+        try:
+            password_hash = generate_password_hash(password)
+            db.execute(
+                "INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)",
+                (username, password_hash, "user"),
+            )
+            db.commit()
+
+            # 보안 감사 로그 기록
+            audit_log = {
+                "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
+                "event": "NEW_USER_REGISTERED",
+                "username": username,
+                "level": "INFO"
+            }
+            audit_logger.info(json.dumps(audit_log, ensure_ascii=False))
+
+            flash("회원가입이 완료되었습니다. 로그인해주세요.", "success")
+            return redirect(url_for("login"))
+
+        except Exception as e:
+            flash("회원가입 중 오류가 발생했습니다.", "danger")
+            return render_template("signup.html")
+
+    return render_template("signup.html")
 
 
 @app.route("/logout")

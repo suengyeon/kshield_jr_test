@@ -11,6 +11,19 @@
                     <div class="mb-3">
                         <input class="form-control" type="file" name="file" required>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">공개 레벨</label>
+                        <div>
+                            {% for level in range(1, session.get('level', 1) + 1) %}
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="level_{{ level }}" name="level_{{ level }}">
+                                <label class="form-check-label" for="level_{{ level }}">
+                                    레벨 {{ level }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
                     <button class="btn btn-primary" type="submit">Upload</button>
                 </form>
             </div>
@@ -29,6 +42,7 @@
                         <tr>
                             <th>파일명</th>
                             <th>업로드한 사용자</th>
+                            <th>공개 레벨</th>
                             <th class="text-end">크기 (B)</th>
                             <th>업로드 날짜 (UTC)</th>
                             <th>동작</th>
@@ -38,20 +52,23 @@
                         {% for f in files %}
                         <tr>
                             <td>{{ f["original_name"] }}</td>
-                            <td>{{ f["uploaded_by"] }}</td>
+                            <td>{{ f["uploaded_by_username"] or '알 수 없음' }}</td>
+                            <td>{{ f["target_levels"] }}</td>
                             <td class="text-end">{{ f["size_bytes"] }}</td>
                             <td>{{ f["uploaded_at"] }}</td>
                             <td>
                                 <a class="btn btn-sm btn-outline-primary" href="{{ url_for('download', id=f['id']) }}">Download</a>
+                                {% if f["owner_id"] == session.get("user_id") or session.get("role") == "admin" %}
                                 <form method="post" action="{{ url_for('delete') }}" class="d-inline">
                                     <input type="hidden" name="id" value="{{ f['id'] }}">
                                     <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
                                 </form>
+                                {% endif %}
                             </td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="5" class="text-center py-4 text-muted">업로드된 파일이 없습니다.</td>
+                            <td colspan="6" class="text-center py-4 text-muted">업로드된 파일이 없습니다.</td>
                         </tr>
                         {% endfor %}
                         </tbody>
