@@ -41,6 +41,9 @@ BASE_DIR = Path(__file__).resolve().parent
 INSTANCE_DIR = BASE_DIR / "instance"
 INSTANCE_DIR.mkdir(parents=True, exist_ok=True)
 
+LOG_DIR = BASE_DIR / "logs"
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+
 DB_TYPE = os.getenv("DB_TYPE", "sqlite").lower()
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = os.getenv("DB_PORT", "5432")
@@ -55,7 +58,7 @@ AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 DEFAULT_USERNAME = os.getenv("APP_DEFAULT_USERNAME", "admin")
 DEFAULT_PASSWORD = os.getenv("APP_DEFAULT_PASSWORD", "ChangeMe123!")
-AUDIT_LOG_PATH = BASE_DIR / "security_audit.log"
+AUDIT_LOG_PATH = LOG_DIR / "security_audit.log"
 
 # 환경 변수 로드 확인 (디버깅용)
 ENV_DEBUG = {
