@@ -475,7 +475,6 @@ def admin_users():
 
     return render_template("admin_users.html", users_by_level=users_by_level)
 
-
 @app.route("/admin/logs")
 @login_required
 @admin_required
@@ -485,19 +484,15 @@ def admin_logs():
 
     try:
         with open(AUDIT_LOG_PATH, "r", encoding="utf-8") as f:
-
             for line in reversed(f.readlines()[-100:]):
-
                 try:
                     logs.append(json.loads(line.strip()))
                 except Exception:
                     continue
-
     except FileNotFoundError:
         pass
 
     return render_template("admin_logs.html", logs=logs)
-
 
 @app.route("/upload", methods=["POST"])
 @login_required
