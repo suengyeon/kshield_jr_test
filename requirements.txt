@@ -2,5 +2,5 @@ Flask==2.3.3
 boto3==1.28.85
 python-dotenv==1.0.0
 Werkzeug==2.3.7
-psycopg2-binary==2.9.7
+mysql-connector-python==8.0.33
 flask-cors==4.0.0

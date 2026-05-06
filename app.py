@@ -9,10 +9,8 @@ from urllib.parse import quote
 
 from dotenv import load_dotenv
 import boto3
-import psycopg2
 import mysql.connector
-from psycopg2.extras import RealDictCursor
-from mysql.connector.cursor import MySQLCursorDict
+from mysql.connector.cursor_cext import CMySQLCursorDict
 from flask import (
     Flask,
     Response,
@@ -131,12 +129,19 @@ app_logger.info("=" * 70)
 
 
 class DBConnectionWrapper:
-    def __init__(self, conn, cursor_factory=None):
+    def __init__(self, conn, cursor_factory=None, db_type=None):
         self.conn = conn
         self.cursor_factory = cursor_factory
+        self.db_type = db_type or DB_TYPE
 
     def execute(self, query, params=None):
-        params = params or ()
+        if params is None:
+            params = ()
+
+        if self.db_type == "mysql" and "?" in query:
+            query = query.replace("?", "%s")
+
+    # ✅ 커서 생성 로직 (이 부분이 빠져 있었음)
         if self.cursor_factory:
             try:
                 cursor = self.conn.cursor(cursor_factory=self.cursor_factory)
@@ -144,7 +149,12 @@ class DBConnectionWrapper:
                 cursor = self.conn.cursor(cursor_class=self.cursor_factory)
         else:
             cursor = self.conn.cursor()
-        cursor.execute(query, params)
+
+        if params:
+            cursor.execute(query, params)
+        else:
+            cursor.execute(query)
+
         return cursor
 
     def commit(self):
@@ -169,37 +179,25 @@ def get_s3_client():
 def connect_sqlite():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
-    return DBConnectionWrapper(conn)
-
-
-def connect_postgres():
-    conn = psycopg2.connect(
-        host=DB_HOST,
-        port=int(DB_PORT),
-        user=DB_USER,
-        password=DB_PASSWORD,
-        dbname=DB_NAME,
-    )
-    return DBConnectionWrapper(conn, cursor_factory=RealDictCursor)
-
+    return DBConnectionWrapper(conn, db_type="sqlite")
 
 def connect_mysql():
+    # 1. 먼저 DB에 연결합니다.
     conn = mysql.connector.connect(
         host=DB_HOST,
         port=int(DB_PORT),
         user=DB_USER,
         password=DB_PASSWORD,
         database=DB_NAME,
+        auth_plugin='mysql_native_password'
     )
-    return DBConnectionWrapper(conn, cursor_factory=MySQLCursorDict)
-
+    # 2. 커서를 생성할 때 딕셔너리 모드를 사용하도록 wrapper에 전달합니다.
+    return DBConnectionWrapper(conn, cursor_factory=CMySQLCursorDict, db_type="mysql")
 
 def get_db():
     if "db" not in g:
         if DB_TYPE == "sqlite":
             g.db = connect_sqlite()
-        elif DB_TYPE == "postgresql" or DB_TYPE == "postgres":
-            g.db = connect_postgres()
         elif DB_TYPE == "mysql":
             g.db = connect_mysql()
         else:
@@ -298,15 +296,7 @@ def init_db():
         db.close()
     else:
         db = None
-        if DB_TYPE in ("postgresql", "postgres"):
-            db = psycopg2.connect(
-                host=DB_HOST,
-                port=int(DB_PORT),
-                user=DB_USER,
-                password=DB_PASSWORD,
-                dbname=DB_NAME,
-            )
-        elif DB_TYPE == "mysql":
+        if DB_TYPE == "mysql":
             db = mysql.connector.connect(
                 host=DB_HOST,
                 port=int(DB_PORT),
@@ -319,58 +309,31 @@ def init_db():
             raise ValueError(f"지원하지 않는 DB_TYPE입니다: {DB_TYPE}")
 
         cursor = db.cursor()
-        if DB_TYPE in ("postgresql", "postgres"):
-            cursor.execute(
-                """
-                CREATE TABLE IF NOT EXISTS users (
-                    id SERIAL PRIMARY KEY,
-                    username TEXT UNIQUE NOT NULL,
-                    password_hash TEXT NOT NULL,
-                    role TEXT NOT NULL DEFAULT 'user',
-                    level INTEGER NOT NULL DEFAULT 1
-                )
-                """
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                username VARCHAR(255) UNIQUE NOT NULL,
+                password_hash VARCHAR(255) NOT NULL,
+                role VARCHAR(50) NOT NULL DEFAULT 'user',
+                level INTEGER NOT NULL DEFAULT 1
             )
-            cursor.execute(
-                """
-                CREATE TABLE IF NOT EXISTS files (
-                    id SERIAL PRIMARY KEY,
-                    owner_id INTEGER NOT NULL,
-                    uploaded_by INTEGER NOT NULL,
-                    original_name TEXT NOT NULL,
-                    s3_key TEXT UNIQUE NOT NULL,
-                    size_bytes INTEGER NOT NULL,
-                    uploaded_at TEXT NOT NULL,
-                    target_levels TEXT NOT NULL DEFAULT '1'
-                )
-                """
+            """
+        )
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS files (
+                id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                owner_id INTEGER NOT NULL,
+                uploaded_by INTEGER NOT NULL,
+                original_name VARCHAR(255) NOT NULL,
+                s3_key VARCHAR(255) UNIQUE NOT NULL,
+                size_bytes BIGINT NOT NULL,
+                uploaded_at VARCHAR(255) NOT NULL,
+                target_levels VARCHAR(255) NOT NULL DEFAULT '1'
             )
-        else:
-            cursor.execute(
-                """
-                CREATE TABLE IF NOT EXISTS users (
-                    id INTEGER PRIMARY KEY AUTO_INCREMENT,
-                    username VARCHAR(255) UNIQUE NOT NULL,
-                    password_hash VARCHAR(255) NOT NULL,
-                    role VARCHAR(50) NOT NULL DEFAULT 'user',
-                    level INTEGER NOT NULL DEFAULT 1
-                )
-                """
-            )
-            cursor.execute(
-                """
-                CREATE TABLE IF NOT EXISTS files (
-                    id INTEGER PRIMARY KEY AUTO_INCREMENT,
-                    owner_id INTEGER NOT NULL,
-                    uploaded_by INTEGER NOT NULL,
-                    original_name VARCHAR(255) NOT NULL,
-                    s3_key VARCHAR(255) UNIQUE NOT NULL,
-                    size_bytes BIGINT NOT NULL,
-                    uploaded_at VARCHAR(255) NOT NULL,
-                    target_levels VARCHAR(255) NOT NULL DEFAULT '1'
-                )
-                """
-            )
+            """
+        )
 
         cursor.execute(
             "SELECT id FROM users WHERE username = %s",

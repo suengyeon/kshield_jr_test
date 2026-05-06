@@ -13,6 +13,7 @@ services:
         source: ${USERPROFILE}/.aws
         target: /home/appuser/.aws
         read_only: true
+      - ./.env:/app/.env:ro
       - ./data:/app/instance  # 로컬의 data 폴더와 컨테이너 내부 DB 폴더 연결
     environment:
       - FLASK_APP=app.py
