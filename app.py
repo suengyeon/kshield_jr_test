@@ -687,9 +687,14 @@ def delete():
     db = get_db()
     file_row = db.execute(
         """
-        SELECT id, s3_key, owner_id
-        FROM files
-        WHERE id = ?
+    SELECT f.id,
+       f.s3_key,
+       f.original_name,
+       f.owner_id,
+       u.username AS owner_username
+    FROM files f
+    LEFT JOIN users u ON f.owner_id = u.id
+    WHERE f.id = ?
         """,
         (file_id,),
     ).fetchone()
@@ -706,6 +711,15 @@ def delete():
     except Exception:
         flash("S3 삭제 중 오류가 발생했습니다.", "danger")
         return redirect(url_for("index"))
+    audit_log = {
+    "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
+    "event": "FILE_DELETED",
+    "username": session.get("username"),
+    "file_name": file_row["s3_key"],
+    "file_id": file_row["id"]
+    }
+    audit_logger.info(json.dumps(audit_log, ensure_ascii=False))
+
 
     db.execute("DELETE FROM files WHERE id = ?", (file_row["id"],))
     db.commit()

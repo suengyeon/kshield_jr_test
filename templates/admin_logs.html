@@ -13,13 +13,13 @@
 
         <div class="table-responsive">
 
-            <table class="table table-striped">
+            <table class="table table-striped align-middle">
 
                 <thead>
                     <tr>
                         <th>시간</th>
                         <th>이벤트</th>
-                        <th>사용자</th>
+                        <th>행위자</th>
                         <th>상세정보</th>
                     </tr>
                 </thead>
@@ -30,53 +30,101 @@
 
                     <tr>
 
-                        <td>{{ log.timestamp }}</td>
+                        <td>
+                            {{ log.timestamp }}
+                        </td>
 
                         <td>
-                            <span class="badge bg-danger">
+
+                            <span class="badge
+                            {% if 'SECURITY' in log.event %}
+                                bg-danger
+                            {% elif 'DELETED' in log.event %}
+                                bg-secondary
+                            {% elif 'DOWNLOADED' in log.event %}
+                                bg-success
+                            {% elif 'UPLOADED' in log.event %}
+                                bg-primary
+                            {% elif 'ADMIN' in log.event %}
+                                bg-warning text-dark
+                            {% else %}
+                                bg-dark
+                            {% endif %}
+                            ">
                                 {{ log.event }}
                             </span>
+
                         </td>
 
                         <td>
-                            {{ log.username or log.admin or '-' }}
+                            {{ log.actor or log.username or log.admin or '-' }}
                         </td>
 
                         <td>
-    <div class="small">
 
-    <div>
-        <strong>시간:</strong>
-        {{ log.timestamp }}
-    </div>
+                            <div class="small">
 
-    <div>
-        <strong>사용자:</strong>
-        {{ log.username or log.admin or '-' }}
-    </div>
+                                <div>
+                                    <strong>시간:</strong>
+                                    {{ log.timestamp }}
+                                </div>
 
-    {% if log.file_name %}
-    <div>
-        <strong>파일명:</strong>
-        {{ log.file_name }}
-    </div>
-    {% endif %}
+                                <div>
+                                    <strong>행위자:</strong>
+                                    {{ log.actor or log.username or log.admin or '-' }}
+                                </div>
 
-    {% if log.target_levels %}
-    <div>
-        <strong>권한 레벨:</strong>
-        {{ log.target_levels }}
-    </div>
-    {% endif %}
+                                {% if log.owner %}
+                                <div>
+                                    <strong>파일 소유자:</strong>
+                                    {{ log.owner }}
+                                </div>
+                                {% endif %}
 
-    {% if log.size_bytes %}
-    <div>
-        <strong>파일 크기:</strong>
-        {{ log.size_bytes }} bytes
-    </div>
-    {% endif %}
+                                {% if log.file_name %}
+                                <div>
+                                    <strong>파일명:</strong>
+                                    {{ log.file_name }}
+                                </div>
+                                {% endif %}
 
-    </div>
+                                {% if log.file_id %}
+                                <div>
+                                    <strong>파일 ID:</strong>
+                                    {{ log.file_id }}
+                                </div>
+                                {% endif %}
+
+                                {% if log.target_levels %}
+                                <div>
+                                    <strong>권한 레벨:</strong>
+                                    {{ log.target_levels }}
+                                </div>
+                                {% endif %}
+
+                                {% if log.size_bytes %}
+                                <div>
+                                    <strong>파일 크기:</strong>
+                                    {{ log.size_bytes }} bytes
+                                </div>
+                                {% endif %}
+
+                                {% if log.user_level %}
+                                <div>
+                                    <strong>사용자 레벨:</strong>
+                                    {{ log.user_level }}
+                                </div>
+                                {% endif %}
+
+                                {% if log.allowed_levels %}
+                                <div>
+                                    <strong>허용 레벨:</strong>
+                                    {{ log.allowed_levels }}
+                                </div>
+                                {% endif %}
+
+                            </div>
+
                         </td>
 
                     </tr>
@@ -94,4 +142,3 @@
 </div>
 
 {% endblock %}
-```
