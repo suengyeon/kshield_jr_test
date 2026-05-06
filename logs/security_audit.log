@@ -1,1 +1,2 @@
 {"timestamp": "2026-05-06T07:05:49", "event": "FILE_DELETED", "username": "admin", "file_name": "6/20260506065614848717_txt", "file_id": 14}
+{"timestamp": "2026-05-06T07:09:01", "event": "FILE_UPLOADED", "username": "user2", "file_name": "계정 정보.txt", "target_levels": "1", "size_bytes": 13}

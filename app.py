@@ -272,6 +272,18 @@ def init_db():
         if "required_level" in columns and "target_levels" in columns:
             cursor.execute("UPDATE files SET target_levels = CAST(required_level AS TEXT) WHERE target_levels IS NULL")
 
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS audit_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT NOT NULL,
+                event TEXT NOT NULL,
+                username TEXT,
+                details TEXT
+            )
+            """
+        )
+
         user_columns = {row[1] for row in cursor.execute("PRAGMA table_info(users)").fetchall()}
         if "role" not in user_columns:
             cursor.execute("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'")
@@ -339,6 +351,18 @@ def init_db():
         )
 
         cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS audit_logs (
+                id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                timestamp VARCHAR(50) NOT NULL,
+                event VARCHAR(255) NOT NULL,
+                username VARCHAR(255),
+                details TEXT
+            )
+            """
+        )
+
+        cursor.execute(
             "SELECT id FROM users WHERE username = %s",
             (DEFAULT_USERNAME,)
         )
@@ -361,6 +385,34 @@ def init_db():
 
         db.commit()
         db.close()
+
+
+def log_audit(audit_log: dict, level: str = "info"):
+    """감사 로그를 파일과 DB에 동시에 저장합니다."""
+    msg = json.dumps(audit_log, ensure_ascii=False)
+    if level == "critical":
+        audit_logger.critical(msg)
+    elif level == "warning":
+        audit_logger.warning(msg)
+    else:
+        audit_logger.info(msg)
+
+    try:
+        db = get_db()
+        details = {k: v for k, v in audit_log.items() if k not in ("timestamp", "event", "username")}
+        if DB_TYPE == "sqlite":
+            db.execute(
+                "INSERT INTO audit_logs (timestamp, event, username, details) VALUES (?, ?, ?, ?)",
+                (audit_log.get("timestamp"), audit_log.get("event"), audit_log.get("username"), json.dumps(details, ensure_ascii=False)),
+            )
+        else:
+            db.execute(
+                "INSERT INTO audit_logs (timestamp, event, username, details) VALUES (%s, %s, %s, %s)",
+                (audit_log.get("timestamp"), audit_log.get("event"), audit_log.get("username"), json.dumps(details, ensure_ascii=False)),
+            )
+        db.commit()
+    except Exception as e:
+        app_logger.error(f"감사 로그 DB 저장 실패: {e}")
 
 
 def login_required(view_func):
@@ -457,12 +509,12 @@ def admin_users():
         audit_log = {
             "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
             "event": "ADMIN_ACTION: USER_LEVEL_CHANGED",
-            "admin": session.get("username"),
+            "username": session.get("username"),
             "target_user_id": target_id,
             "target_username": user_row["username"],
             "new_level": new_level,
         }
-        audit_logger.info(json.dumps(audit_log, ensure_ascii=False))
+        log_audit(audit_log)
 
         flash(f"{user_row['username']}님의 레벨이 {new_level}로 변경되었습니다.", "success")
         return redirect(url_for("admin_users"))
@@ -482,18 +534,38 @@ def admin_users():
 @login_required
 @admin_required
 def admin_logs():
-
     logs = []
-
     try:
-        with open(AUDIT_LOG_PATH, "r", encoding="utf-8") as f:
-            for line in reversed(f.readlines()[-100:]):
-                try:
-                    logs.append(json.loads(line.strip()))
-                except Exception:
-                    continue
-    except FileNotFoundError:
-        pass
+        db = get_db()
+        if DB_TYPE == "sqlite":
+            rows = db.execute(
+                "SELECT timestamp, event, username, details FROM audit_logs ORDER BY id DESC LIMIT 100"
+            ).fetchall()
+        else:
+            rows = db.execute(
+                "SELECT timestamp, event, username, details FROM audit_logs ORDER BY id DESC LIMIT 100"
+            ).fetchall()
+
+        for row in rows:
+            entry = {"timestamp": row["timestamp"], "event": row["event"], "username": row["username"]}
+            try:
+                details = json.loads(row["details"] or "{}")
+                entry.update(details)
+            except Exception:
+                pass
+            logs.append(entry)
+    except Exception as e:
+        app_logger.error(f"감사 로그 DB 조회 실패: {e}")
+        # DB 조회 실패 시 파일에서 폴백
+        try:
+            with open(AUDIT_LOG_PATH, "r", encoding="utf-8") as f:
+                for line in reversed(f.readlines()[-100:]):
+                    try:
+                        logs.append(json.loads(line.strip()))
+                    except Exception:
+                        continue
+        except FileNotFoundError:
+            pass
 
     return render_template("admin_logs.html", logs=logs)
 
@@ -560,7 +632,7 @@ def upload():
             "requested_levels": ",".join(str(l) for l in selected_levels),
             "file_name": filename,
         }
-        audit_logger.critical(json.dumps(audit_log, ensure_ascii=False))
+        log_audit(audit_log, level="critical")
         flash("자신의 권한보다 높은 레벨을 선택할 수 없습니다.", "danger")
         return redirect(url_for("index"))
 
@@ -585,14 +657,14 @@ def upload():
     )
 
     audit_log = {
-    "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
-    "event": "FILE_UPLOADED",
-    "username": session.get("username"),
-    "file_name": filename,
-    "target_levels": target_levels,
-    "size_bytes": file_size
+        "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
+        "event": "FILE_UPLOADED",
+        "username": session.get("username"),
+        "file_name": filename,
+        "target_levels": target_levels,
+        "size_bytes": file_size,
     }
-    audit_logger.info(json.dumps(audit_log, ensure_ascii=False))
+    log_audit(audit_log)
 
     db.commit()
     flash("파일이 업로드되었습니다.", "success")
@@ -647,7 +719,7 @@ def download():
             "allowed_levels": file_row["target_levels"],
             "file_id": file_row["id"],
         }
-        audit_logger.warning(json.dumps(audit_log, ensure_ascii=False))
+        log_audit(audit_log, level="warning")
         abort(403)
 
     try:
@@ -662,10 +734,9 @@ def download():
         "event": "FILE_DOWNLOADED",
         "username": session.get("username"),
         "file_name": file_row["original_name"],
-        "file_id": file_row["id"]
+        "file_id": file_row["id"],
     }
-
-    audit_logger.info(json.dumps(audit_log, ensure_ascii=False))
+    log_audit(audit_log)
 
     filename_header = quote(file_row["original_name"])
     return Response(
@@ -715,13 +786,13 @@ def delete():
         flash("S3 삭제 중 오류가 발생했습니다.", "danger")
         return redirect(url_for("index"))
     audit_log = {
-    "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
-    "event": "FILE_DELETED",
-    "username": session.get("username"),
-    "file_name": file_row["s3_key"],
-    "file_id": file_row["id"]
+        "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
+        "event": "FILE_DELETED",
+        "username": session.get("username"),
+        "file_name": file_row["s3_key"],
+        "file_id": file_row["id"],
     }
-    audit_logger.info(json.dumps(audit_log, ensure_ascii=False))
+    log_audit(audit_log)
 
 
     db.execute("DELETE FROM files WHERE id = ?", (file_row["id"],))
@@ -801,9 +872,8 @@ def register():
                 "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
                 "event": "NEW_USER_REGISTERED",
                 "username": username,
-                "level": "INFO"
             }
-            audit_logger.info(json.dumps(audit_log, ensure_ascii=False))
+            log_audit(audit_log)
 
             flash("회원가입이 완료되었습니다. 로그인해주세요.", "success")
             return redirect(url_for("login"))
