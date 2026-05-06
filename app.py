@@ -475,6 +475,7 @@ def admin_users():
 
     return render_template("admin_users.html", users_by_level=users_by_level)
 
+<<<<<<< HEAD
 @app.route("/admin/logs")
 @login_required
 @admin_required
@@ -498,6 +499,8 @@ def admin_logs():
     return render_template("admin_logs.html", logs=logs)
 
 
+=======
+>>>>>>> 3c564ccc91507ccc90bb6ae001c7cd2126864857
 
 @app.route("/upload", methods=["POST"])
 @login_required
@@ -657,6 +660,7 @@ def download():
     except Exception:
         flash("파일 다운로드 중 오류가 발생했습니다.", "danger")
         return redirect(url_for("index"))
+
         
     audit_log = {
         "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
