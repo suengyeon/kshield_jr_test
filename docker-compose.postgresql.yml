@@ -1,0 +1,71 @@
+version: "3.9"
+
+services:
+  # PostgreSQL 데이터베이스 (팀 전체가 공유)
+  postgres:
+    image: postgres:15-alpine
+    container_name: cloudsec-postgres
+    environment:
+      POSTGRES_USER: cloudsec_user
+      POSTGRES_PASSWORD: cloudsec_password_change_me
+      POSTGRES_DB: cloudsec_app
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cloudsec_user -d cloudsec_app"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Flask 애플리케이션
+  cloudsec-app:
+    build: .
+    container_name: cloudsec-corp-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "5000:5000"
+    volumes:
+      - type: bind
+        source: ${USERPROFILE}/.aws
+        target: /home/appuser/.aws
+        read_only: true
+      - ./data:/app/instance  # 파일 메타데이터 (선택)
+    environment:
+      # Flask 설정
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+      - FLASK_SECRET_KEY=change-this-secret-in-production
+      
+      # 데이터베이스 설정 (PostgreSQL)
+      - DB_TYPE=postgresql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=cloudsec_user
+      - DB_PASSWORD=cloudsec_password_change_me
+      - DB_NAME=cloudsec_app
+      
+      # S3 설정
+      - AWS_DEFAULT_REGION=ap-northeast-2
+      - S3_BUCKET_NAME=cloudsec-corp-storage-0501
+      # AWS 자격증명은 .env 파일에서 로드 (또는 IAM 역할)
+      
+      # 기본 사용자
+      - APP_DEFAULT_USERNAME=admin
+      - APP_DEFAULT_PASSWORD=ChangeMe123!
+    
+    restart: unless-stopped
+    networks:
+      - cloudsec-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  cloudsec-network:
+    driver: bridge

@@ -7,6 +7,7 @@ from functools import wraps
 from pathlib import Path
 from urllib.parse import quote
 
+from dotenv import load_dotenv
 import boto3
 from flask import (
     Flask,
@@ -23,6 +24,9 @@ from flask import (
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
+# .env 파일 로드 (최상단에서 처리)
+load_dotenv()
+
 
 BASE_DIR = Path(__file__).resolve().parent
 INSTANCE_DIR = BASE_DIR / "instance"
@@ -30,12 +34,37 @@ INSTANCE_DIR.mkdir(parents=True, exist_ok=True)
 DB_PATH = INSTANCE_DIR / "metadata.db"
 BUCKET_NAME = os.getenv("S3_BUCKET_NAME", "cloudsec-corp-storage-0501")
 REGION = os.getenv("AWS_DEFAULT_REGION", "ap-northeast-2")
+AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 DEFAULT_USERNAME = os.getenv("APP_DEFAULT_USERNAME", "admin")
 DEFAULT_PASSWORD = os.getenv("APP_DEFAULT_PASSWORD", "ChangeMe123!")
 AUDIT_LOG_PATH = BASE_DIR / "security_audit.log"
 
+# 환경 변수 로드 확인 (디버깅용)
+ENV_DEBUG = {
+    "DB_PATH": str(DB_PATH),
+    "S3_BUCKET_NAME": BUCKET_NAME,
+    "AWS_REGION": REGION,
+    "AWS_CREDENTIALS_LOADED": bool(AWS_ACCESS_KEY and AWS_SECRET_KEY),
+    "FLASK_SECRET_KEY_SET": bool(os.getenv("FLASK_SECRET_KEY")),
+}
+
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-secret-change-me")
+
+# CORS 설정 (필요시 활성화)
+# flask-cors를 설치한 경우: from flask_cors import CORS; CORS(app)
+# 또는 수동 설정:
+@app.after_request
+def after_request(response):
+    """CORS 헤더 추가 (같은 도메인/로컬 개발용)"""
+    origin = request.headers.get('Origin', '*')
+    # 프로덕션 환경에서는 특정 도메인으로 제한
+    response.headers['Access-Control-Allow-Origin'] = origin
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    response.headers['Access-Control-Allow-Credentials'] = 'true'
+    return response
 
 # 보안 감사 로그 설정
 audit_logger = logging.getLogger("audit")
@@ -44,9 +73,32 @@ audit_handler = logging.FileHandler(AUDIT_LOG_PATH)
 audit_handler.setFormatter(logging.Formatter("%(message)s"))
 audit_logger.addHandler(audit_handler)
 
+# 환경 변수 로드 확인 로그 (서버 시작 시)
+logging.basicConfig(level=logging.INFO)
+app_logger = logging.getLogger(__name__)
+app_logger.info("=" * 50)
+app_logger.info("Flask 앱 시작 - 환경 변수 로드 상태:")
+app_logger.info(f"  DB Path: {ENV_DEBUG['DB_PATH']}")
+app_logger.info(f"  S3 Bucket: {ENV_DEBUG['S3_BUCKET_NAME']}")
+app_logger.info(f"  AWS Region: {ENV_DEBUG['AWS_REGION']}")
+app_logger.info(f"  AWS Credentials: {'✓ 로드됨' if ENV_DEBUG['AWS_CREDENTIALS_LOADED'] else '✗ 누락됨 (IAM 역할 또는 ~/.aws/credentials 사용)'}")
+app_logger.info(f"  FLASK_SECRET_KEY: {'✓ 설정됨' if ENV_DEBUG['FLASK_SECRET_KEY_SET'] else '✗ 기본값 사용'}")
+app_logger.info("=" * 50)
+
 
 def get_s3_client():
-    return boto3.client("s3", region_name=REGION)
+    """S3 클라이언트 생성 (명시적 자격증명 또는 IAM 역할 사용)"""
+    if AWS_ACCESS_KEY and AWS_SECRET_KEY:
+        # .env에서 명시적 자격증명 사용
+        return boto3.client(
+            "s3",
+            region_name=REGION,
+            aws_access_key_id=AWS_ACCESS_KEY,
+            aws_secret_access_key=AWS_SECRET_KEY,
+        )
+    else:
+        # IAM 역할 또는 ~/.aws/credentials 사용
+        return boto3.client("s3", region_name=REGION)
 
 
 def get_db():
@@ -291,8 +343,20 @@ def upload():
     try:
         s3 = get_s3_client()
         s3.upload_fileobj(uploaded_file.stream, BUCKET_NAME, s3_key)
-    except Exception:
-        flash("S3 업로드 중 오류가 발생했습니다.", "danger")
+    except Exception as e:
+        # S3 연결 에러 상세 로깅
+        error_msg = str(e)
+        app_logger.error(f"S3 업로드 실패 - {error_msg}")
+        
+        if "NoCredentialsError" in str(type(e).__name__):
+            flash("AWS 자격증명이 설정되지 않았습니다. .env 파일의 AWS_ACCESS_KEY_ID와 AWS_SECRET_ACCESS_KEY를 확인하세요.", "danger")
+        elif "403" in error_msg or "Forbidden" in error_msg:
+            flash("S3 버킷에 대한 접근 권한이 없습니다. IAM 정책을 확인하세요.", "danger")
+        elif "NoSuchBucket" in error_msg:
+            flash(f"S3 버킷 '{BUCKET_NAME}'이(가) 존재하지 않습니다.", "danger")
+        else:
+            flash(f"S3 업로드 중 오류가 발생했습니다: {error_msg}", "danger")
+        
         return redirect(url_for("index"))
 
     # 접근 허용 레벨 수집
