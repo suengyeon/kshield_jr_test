@@ -9,6 +9,10 @@ from urllib.parse import quote
 
 from dotenv import load_dotenv
 import boto3
+import psycopg2
+import mysql.connector
+from psycopg2.extras import RealDictCursor
+from mysql.connector.cursor import MySQLCursorDict
 from flask import (
     Flask,
     Response,
@@ -35,11 +39,18 @@ if not env_path.exists():
 else:
     logging.info(f"✓ .env 파일 로드됨: {env_path}")
 
-
 BASE_DIR = Path(__file__).resolve().parent
 INSTANCE_DIR = BASE_DIR / "instance"
 INSTANCE_DIR.mkdir(parents=True, exist_ok=True)
-DB_PATH = INSTANCE_DIR / "metadata.db"
+
+DB_TYPE = os.getenv("DB_TYPE", "sqlite").lower()
+DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_PORT = os.getenv("DB_PORT", "5432")
+DB_USER = os.getenv("DB_USER", "postgres")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "")
+DB_NAME = os.getenv("DB_NAME", "cloudsec_app")
+DB_PATH = Path(os.getenv("DB_PATH", str(INSTANCE_DIR / "metadata.db")))
+
 BUCKET_NAME = os.getenv("S3_BUCKET_NAME", "cloudsec-corp-storage-0501")
 REGION = os.getenv("AWS_DEFAULT_REGION", "ap-northeast-2")
 AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY_ID")
@@ -50,6 +61,10 @@ AUDIT_LOG_PATH = BASE_DIR / "security_audit.log"
 
 # 환경 변수 로드 확인 (디버깅용)
 ENV_DEBUG = {
+    "DB_TYPE": DB_TYPE,
+    "DB_HOST": DB_HOST,
+    "DB_PORT": DB_PORT,
+    "DB_NAME": DB_NAME,
     "DB_PATH": str(DB_PATH),
     "S3_BUCKET_NAME": BUCKET_NAME,
     "AWS_REGION": REGION,
@@ -115,25 +130,80 @@ app_logger.info("=" * 70)
 
 
 
+class DBConnectionWrapper:
+    def __init__(self, conn, cursor_factory=None):
+        self.conn = conn
+        self.cursor_factory = cursor_factory
+
+    def execute(self, query, params=None):
+        params = params or ()
+        if self.cursor_factory:
+            try:
+                cursor = self.conn.cursor(cursor_factory=self.cursor_factory)
+            except TypeError:
+                cursor = self.conn.cursor(cursor_class=self.cursor_factory)
+        else:
+            cursor = self.conn.cursor()
+        cursor.execute(query, params)
+        return cursor
+
+    def commit(self):
+        self.conn.commit()
+
+    def close(self):
+        self.conn.close()
+
+
 def get_s3_client():
     """S3 클라이언트 생성 (명시적 자격증명 또는 IAM 역할 사용)"""
     if AWS_ACCESS_KEY and AWS_SECRET_KEY:
-        # .env에서 명시적 자격증명 사용
         return boto3.client(
             "s3",
             region_name=REGION,
             aws_access_key_id=AWS_ACCESS_KEY,
             aws_secret_access_key=AWS_SECRET_KEY,
         )
-    else:
-        # IAM 역할 또는 ~/.aws/credentials 사용
-        return boto3.client("s3", region_name=REGION)
+    return boto3.client("s3", region_name=REGION)
+
+
+def connect_sqlite():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return DBConnectionWrapper(conn)
+
+
+def connect_postgres():
+    conn = psycopg2.connect(
+        host=DB_HOST,
+        port=int(DB_PORT),
+        user=DB_USER,
+        password=DB_PASSWORD,
+        dbname=DB_NAME,
+    )
+    return DBConnectionWrapper(conn, cursor_factory=RealDictCursor)
+
+
+def connect_mysql():
+    conn = mysql.connector.connect(
+        host=DB_HOST,
+        port=int(DB_PORT),
+        user=DB_USER,
+        password=DB_PASSWORD,
+        database=DB_NAME,
+    )
+    return DBConnectionWrapper(conn, cursor_factory=MySQLCursorDict)
 
 
 def get_db():
     if "db" not in g:
-        g.db = sqlite3.connect(DB_PATH)
-        g.db.row_factory = sqlite3.Row
+        if DB_TYPE == "sqlite":
+            g.db = connect_sqlite()
+        elif DB_TYPE == "postgresql" or DB_TYPE == "postgres":
+            g.db = connect_postgres()
+        elif DB_TYPE == "mysql":
+            g.db = connect_mysql()
+        else:
+            raise ValueError(f"지원하지 않는 DB_TYPE입니다: {DB_TYPE}")
     return g.db
 
 
@@ -145,89 +215,186 @@ def close_db(_error):
 
 
 def init_db():
-    db = sqlite3.connect(DB_PATH)
-    cursor = db.cursor()
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            role TEXT NOT NULL DEFAULT 'user',
-            level INTEGER NOT NULL DEFAULT 1
-        )
-        """
-    )
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS files (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            owner_id INTEGER NOT NULL,
-            uploaded_by INTEGER NOT NULL,
-            original_name TEXT NOT NULL,
-            s3_key TEXT UNIQUE NOT NULL,
-            size_bytes INTEGER NOT NULL,
-            uploaded_at TEXT NOT NULL,
-            target_levels TEXT NOT NULL DEFAULT '1',
-            FOREIGN KEY(owner_id) REFERENCES users(id),
-            FOREIGN KEY(uploaded_by) REFERENCES users(id)
-        )
-        """
-    )
-    columns = {row[1] for row in cursor.execute("PRAGMA table_info(files)").fetchall()}
-    if "uploaded_by" not in columns:
-        cursor.execute("ALTER TABLE files ADD COLUMN uploaded_by INTEGER")
-        cursor.execute("UPDATE files SET uploaded_by = owner_id WHERE uploaded_by IS NULL")
-    if "required_level" not in columns:
-        cursor.execute("ALTER TABLE files ADD COLUMN required_level INTEGER NOT NULL DEFAULT 1")
-        if "min_level" in columns:
-            cursor.execute("UPDATE files SET required_level = min_level")
-    if "allow_lower" in columns:
-        # Migrate from allow_lower to target_levels
-        all_files = cursor.execute("SELECT id, required_level, allow_lower FROM files").fetchall()
-        for file_row in all_files:
-            required_level = file_row[1]
-            allow_lower = file_row[2]
-            if allow_lower:
-                # allow_lower가 True면 1부터 required_level까지 모두 허용
-                target_levels = ",".join(str(l) for l in range(1, required_level + 1))
-            else:
-                # allow_lower가 False면 required_level만 허용
-                target_levels = str(required_level)
-            cursor.execute("UPDATE files SET target_levels = ? WHERE id = ?", (target_levels, file_row[0]))
-        cursor.execute("ALTER TABLE files DROP COLUMN allow_lower")
-    if "target_levels" not in columns:
-        cursor.execute("ALTER TABLE files ADD COLUMN target_levels TEXT NOT NULL DEFAULT '1'")
-    if "required_level" in columns and "target_levels" in columns:
-        # Make sure all files have target_levels set
-        cursor.execute("UPDATE files SET target_levels = CAST(required_level AS TEXT) WHERE target_levels IS NULL")
-
-    # Check if role and level columns exist in users table
-    user_columns = {row[1] for row in cursor.execute("PRAGMA table_info(users)").fetchall()}
-    if "role" not in user_columns:
-        cursor.execute("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'")
-    if "level" not in user_columns:
-        cursor.execute("ALTER TABLE users ADD COLUMN level INTEGER NOT NULL DEFAULT 1")
-
-    default_user = cursor.execute(
-        "SELECT id FROM users WHERE username = ?", (DEFAULT_USERNAME,)
-    ).fetchone()
-    if not default_user:
+    if DB_TYPE == "sqlite":
+        db = sqlite3.connect(DB_PATH)
+        db.row_factory = sqlite3.Row
+        cursor = db.cursor()
         cursor.execute(
-            "INSERT INTO users (username, password_hash, role, level) VALUES (?, ?, ?, ?)",
-            (DEFAULT_USERNAME, generate_password_hash(DEFAULT_PASSWORD), "admin", 3),
+            """
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                role TEXT NOT NULL DEFAULT 'user',
+                level INTEGER NOT NULL DEFAULT 1
+            )
+            """
         )
-
-    admin_user = cursor.execute(
-        "SELECT id FROM users WHERE username = 'admin'"
-    ).fetchone()
-    if not admin_user:
         cursor.execute(
-            "INSERT INTO users (username, password_hash, role, level) VALUES (?, ?, ?, ?)",
-            ("admin", generate_password_hash(DEFAULT_PASSWORD), "admin", 3),
+            """
+            CREATE TABLE IF NOT EXISTS files (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                owner_id INTEGER NOT NULL,
+                uploaded_by INTEGER NOT NULL,
+                original_name TEXT NOT NULL,
+                s3_key TEXT UNIQUE NOT NULL,
+                size_bytes INTEGER NOT NULL,
+                uploaded_at TEXT NOT NULL,
+                target_levels TEXT NOT NULL DEFAULT '1',
+                FOREIGN KEY(owner_id) REFERENCES users(id),
+                FOREIGN KEY(uploaded_by) REFERENCES users(id)
+            )
+            """
         )
-    db.commit()
-    db.close()
+        columns = {row[1] for row in cursor.execute("PRAGMA table_info(files)").fetchall()}
+        if "uploaded_by" not in columns:
+            cursor.execute("ALTER TABLE files ADD COLUMN uploaded_by INTEGER")
+            cursor.execute("UPDATE files SET uploaded_by = owner_id WHERE uploaded_by IS NULL")
+        if "required_level" not in columns:
+            cursor.execute("ALTER TABLE files ADD COLUMN required_level INTEGER NOT NULL DEFAULT 1")
+            if "min_level" in columns:
+                cursor.execute("UPDATE files SET required_level = min_level")
+        if "allow_lower" in columns:
+            # Migrate from allow_lower to target_levels
+            all_files = cursor.execute("SELECT id, required_level, allow_lower FROM files").fetchall()
+            for file_row in all_files:
+                required_level = file_row[1]
+                allow_lower = file_row[2]
+                if allow_lower:
+                    target_levels = ",".join(str(l) for l in range(1, required_level + 1))
+                else:
+                    target_levels = str(required_level)
+                cursor.execute("UPDATE files SET target_levels = ? WHERE id = ?", (target_levels, file_row[0]))
+            cursor.execute("ALTER TABLE files DROP COLUMN allow_lower")
+        if "target_levels" not in columns:
+            cursor.execute("ALTER TABLE files ADD COLUMN target_levels TEXT NOT NULL DEFAULT '1'")
+        if "required_level" in columns and "target_levels" in columns:
+            cursor.execute("UPDATE files SET target_levels = CAST(required_level AS TEXT) WHERE target_levels IS NULL")
+
+        user_columns = {row[1] for row in cursor.execute("PRAGMA table_info(users)").fetchall()}
+        if "role" not in user_columns:
+            cursor.execute("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'")
+        if "level" not in user_columns:
+            cursor.execute("ALTER TABLE users ADD COLUMN level INTEGER NOT NULL DEFAULT 1")
+
+        default_user = cursor.execute(
+            "SELECT id FROM users WHERE username = ?", (DEFAULT_USERNAME,)
+        ).fetchone()
+        if not default_user:
+            cursor.execute(
+                "INSERT INTO users (username, password_hash, role, level) VALUES (?, ?, ?, ?)",
+                (DEFAULT_USERNAME, generate_password_hash(DEFAULT_PASSWORD), "admin", 3),
+            )
+
+        admin_user = cursor.execute(
+            "SELECT id FROM users WHERE username = 'admin'"
+        ).fetchone()
+        if not admin_user:
+            cursor.execute(
+                "INSERT INTO users (username, password_hash, role, level) VALUES (?, ?, ?, ?)",
+                ("admin", generate_password_hash(DEFAULT_PASSWORD), "admin", 3),
+            )
+        db.commit()
+        db.close()
+    else:
+        db = None
+        if DB_TYPE in ("postgresql", "postgres"):
+            db = psycopg2.connect(
+                host=DB_HOST,
+                port=int(DB_PORT),
+                user=DB_USER,
+                password=DB_PASSWORD,
+                dbname=DB_NAME,
+            )
+        elif DB_TYPE == "mysql":
+            db = mysql.connector.connect(
+                host=DB_HOST,
+                port=int(DB_PORT),
+                user=DB_USER,
+                password=DB_PASSWORD,
+                database=DB_NAME,
+            )
+
+        if db is None:
+            raise ValueError(f"지원하지 않는 DB_TYPE입니다: {DB_TYPE}")
+
+        cursor = db.cursor()
+        if DB_TYPE in ("postgresql", "postgres"):
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS users (
+                    id SERIAL PRIMARY KEY,
+                    username TEXT UNIQUE NOT NULL,
+                    password_hash TEXT NOT NULL,
+                    role TEXT NOT NULL DEFAULT 'user',
+                    level INTEGER NOT NULL DEFAULT 1
+                )
+                """
+            )
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS files (
+                    id SERIAL PRIMARY KEY,
+                    owner_id INTEGER NOT NULL,
+                    uploaded_by INTEGER NOT NULL,
+                    original_name TEXT NOT NULL,
+                    s3_key TEXT UNIQUE NOT NULL,
+                    size_bytes INTEGER NOT NULL,
+                    uploaded_at TEXT NOT NULL,
+                    target_levels TEXT NOT NULL DEFAULT '1'
+                )
+                """
+            )
+        else:
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                    username VARCHAR(255) UNIQUE NOT NULL,
+                    password_hash VARCHAR(255) NOT NULL,
+                    role VARCHAR(50) NOT NULL DEFAULT 'user',
+                    level INTEGER NOT NULL DEFAULT 1
+                )
+                """
+            )
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS files (
+                    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                    owner_id INTEGER NOT NULL,
+                    uploaded_by INTEGER NOT NULL,
+                    original_name VARCHAR(255) NOT NULL,
+                    s3_key VARCHAR(255) UNIQUE NOT NULL,
+                    size_bytes BIGINT NOT NULL,
+                    uploaded_at VARCHAR(255) NOT NULL,
+                    target_levels VARCHAR(255) NOT NULL DEFAULT '1'
+                )
+                """
+            )
+
+        cursor.execute(
+            "SELECT id FROM users WHERE username = %s",
+            (DEFAULT_USERNAME,)
+        )
+        default_user = cursor.fetchone()
+        if not default_user:
+            cursor.execute(
+                "INSERT INTO users (username, password_hash, role, level) VALUES (%s, %s, %s, %s)",
+                (DEFAULT_USERNAME, generate_password_hash(DEFAULT_PASSWORD), "admin", 3),
+            )
+
+        cursor.execute(
+            "SELECT id FROM users WHERE username = 'admin'"
+        )
+        admin_user = cursor.fetchone()
+        if not admin_user:
+            cursor.execute(
+                "INSERT INTO users (username, password_hash, role, level) VALUES (%s, %s, %s, %s)",
+                ("admin", generate_password_hash(DEFAULT_PASSWORD), "admin", 3),
+            )
+
+        db.commit()
+        db.close()
 
 
 def login_required(view_func):
