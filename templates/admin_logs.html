@@ -1,0 +1,97 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="card shadow-sm">
+
+    <div class="card-header bg-white">
+        <h5 class="mb-0">보안 감사 로그</h5>
+    </div>
+
+    <div class="card-body">
+
+        <div class="table-responsive">
+
+            <table class="table table-striped">
+
+                <thead>
+                    <tr>
+                        <th>시간</th>
+                        <th>이벤트</th>
+                        <th>사용자</th>
+                        <th>상세정보</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                {% for log in logs %}
+
+                    <tr>
+
+                        <td>{{ log.timestamp }}</td>
+
+                        <td>
+                            <span class="badge bg-danger">
+                                {{ log.event }}
+                            </span>
+                        </td>
+
+                        <td>
+                            {{ log.username or log.admin or '-' }}
+                        </td>
+
+                        <td>
+    <div class="small">
+
+    <div>
+        <strong>시간:</strong>
+        {{ log.timestamp }}
+    </div>
+
+    <div>
+        <strong>사용자:</strong>
+        {{ log.username or log.admin or '-' }}
+    </div>
+
+    {% if log.file_name %}
+    <div>
+        <strong>파일명:</strong>
+        {{ log.file_name }}
+    </div>
+    {% endif %}
+
+    {% if log.target_levels %}
+    <div>
+        <strong>권한 레벨:</strong>
+        {{ log.target_levels }}
+    </div>
+    {% endif %}
+
+    {% if log.size_bytes %}
+    <div>
+        <strong>파일 크기:</strong>
+        {{ log.size_bytes }} bytes
+    </div>
+    {% endif %}
+
+    </div>
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+```
