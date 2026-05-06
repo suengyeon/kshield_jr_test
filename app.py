@@ -24,8 +24,16 @@ from flask import (
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
-# .env 파일 로드 (최상단에서 처리)
-load_dotenv()
+# .env 파일 로드 (명시적 경로 지정)
+BASE_DIR = Path(__file__).resolve().parent
+env_path = BASE_DIR / ".env"
+load_dotenv(dotenv_path=env_path)
+
+# 디버깅: 환경 변수 로드 상태 확인
+if not env_path.exists():
+    logging.warning(f"⚠️  .env 파일을 찾을 수 없습니다: {env_path}")
+else:
+    logging.info(f"✓ .env 파일 로드됨: {env_path}")
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -52,14 +60,11 @@ ENV_DEBUG = {
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-secret-change-me")
 
-# CORS 설정 (필요시 활성화)
-# flask-cors를 설치한 경우: from flask_cors import CORS; CORS(app)
-# 또는 수동 설정:
+# CORS 설정
 @app.after_request
 def after_request(response):
     """CORS 헤더 추가 (같은 도메인/로컬 개발용)"""
     origin = request.headers.get('Origin', '*')
-    # 프로덕션 환경에서는 특정 도메인으로 제한
     response.headers['Access-Control-Allow-Origin'] = origin
     response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
     response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
@@ -73,17 +78,41 @@ audit_handler = logging.FileHandler(AUDIT_LOG_PATH)
 audit_handler.setFormatter(logging.Formatter("%(message)s"))
 audit_logger.addHandler(audit_handler)
 
-# 환경 변수 로드 확인 로그 (서버 시작 시)
-logging.basicConfig(level=logging.INFO)
+# 상세한 환경 변수 디버깅 로그
+logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
 app_logger = logging.getLogger(__name__)
-app_logger.info("=" * 50)
-app_logger.info("Flask 앱 시작 - 환경 변수 로드 상태:")
-app_logger.info(f"  DB Path: {ENV_DEBUG['DB_PATH']}")
-app_logger.info(f"  S3 Bucket: {ENV_DEBUG['S3_BUCKET_NAME']}")
-app_logger.info(f"  AWS Region: {ENV_DEBUG['AWS_REGION']}")
-app_logger.info(f"  AWS Credentials: {'✓ 로드됨' if ENV_DEBUG['AWS_CREDENTIALS_LOADED'] else '✗ 누락됨 (IAM 역할 또는 ~/.aws/credentials 사용)'}")
-app_logger.info(f"  FLASK_SECRET_KEY: {'✓ 설정됨' if ENV_DEBUG['FLASK_SECRET_KEY_SET'] else '✗ 기본값 사용'}")
-app_logger.info("=" * 50)
+
+# 서버 시작 시 환경 변수 상태 출력
+app_logger.info("=" * 70)
+app_logger.info("🚀 Flask 앱 시작 - 환경 변수 진단")
+app_logger.info("=" * 70)
+app_logger.info(f"📁 현재 디렉토리: {Path.cwd()}")
+app_logger.info(f"📁 .env 파일 경로: {env_path}")
+app_logger.info(f"✓ .env 파일 존재: {env_path.exists()}")
+
+if env_path.exists():
+    # .env 파일 읽기
+    with open(env_path, 'r') as f:
+        env_lines = [line.strip() for line in f.readlines() if line.strip() and not line.startswith('#')]
+    app_logger.info(f"✓ .env 파일 라인 수: {len(env_lines)}")
+
+app_logger.info("\n📋 환경 변수 로드 상태:")
+app_logger.info(f"  FLASK_SECRET_KEY: {'✓ 설정됨' if os.getenv('FLASK_SECRET_KEY') else '✗ 미설정'}")
+app_logger.info(f"  AWS_DEFAULT_REGION: {REGION}")
+app_logger.info(f"  S3_BUCKET_NAME: {BUCKET_NAME}")
+app_logger.info(f"  AWS_ACCESS_KEY_ID: {'✓ 로드됨' if AWS_ACCESS_KEY else '✗ 미설정'}")
+app_logger.info(f"  AWS_SECRET_ACCESS_KEY: {'✓ 로드됨' if AWS_SECRET_KEY else '✗ 미설정'}")
+app_logger.info(f"  APP_DEFAULT_USERNAME: {DEFAULT_USERNAME}")
+
+if AWS_ACCESS_KEY and AWS_SECRET_KEY:
+    app_logger.info("\n✅ AWS 자격증명 로드 완료! S3 업로드 가능합니다.")
+else:
+    app_logger.warning("\n⚠️  AWS 자격증명이 미설정되었습니다!")
+    app_logger.warning("   → .env 파일의 AWS_ACCESS_KEY_ID와 AWS_SECRET_ACCESS_KEY를 확인하세요")
+    app_logger.warning("   → 또는 ~/.aws/credentials 파일을 확인하세요")
+
+app_logger.info("=" * 70)
+
 
 
 def get_s3_client():

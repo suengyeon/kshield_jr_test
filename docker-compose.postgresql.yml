@@ -29,6 +29,8 @@ services:
         condition: service_healthy
     ports:
       - "5000:5000"
+    env_file:
+      - .env  # ← .env 파일 자동 로드
     volumes:
       - type: bind
         source: ${USERPROFILE}/.aws
@@ -39,7 +41,6 @@ services:
       # Flask 설정
       - FLASK_APP=app.py
       - FLASK_ENV=development
-      - FLASK_SECRET_KEY=change-this-secret-in-production
       
       # 데이터베이스 설정 (PostgreSQL)
       - DB_TYPE=postgresql
@@ -49,14 +50,14 @@ services:
       - DB_PASSWORD=cloudsec_password_change_me
       - DB_NAME=cloudsec_app
       
-      # S3 설정
-      - AWS_DEFAULT_REGION=ap-northeast-2
-      - S3_BUCKET_NAME=cloudsec-corp-storage-0501
-      # AWS 자격증명은 .env 파일에서 로드 (또는 IAM 역할)
-      
-      # 기본 사용자
-      - APP_DEFAULT_USERNAME=admin
-      - APP_DEFAULT_PASSWORD=ChangeMe123!
+      # S3 & AWS 자격증명은 .env에서 로드
+      # FLASK_SECRET_KEY=${FLASK_SECRET_KEY}
+      # AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
+      # S3_BUCKET_NAME=${S3_BUCKET_NAME}
+      # AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      # AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      # APP_DEFAULT_USERNAME=${APP_DEFAULT_USERNAME}
+      # APP_DEFAULT_PASSWORD=${APP_DEFAULT_PASSWORD}
     
     restart: unless-stopped
     networks:
