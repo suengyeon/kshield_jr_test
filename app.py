@@ -791,6 +791,8 @@ def delete():
         "username": session.get("username"),
         "file_name": file_row["s3_key"],
         "file_id": file_row["id"],
+        "owner_id": file_row["owner_id"],
+        "owner": file_row["owner_username"],
     }
     log_audit(audit_log)
 
