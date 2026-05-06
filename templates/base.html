@@ -10,46 +10,16 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
         <a class="navbar-brand" href="{{ url_for('index') }}">CloudSec Corp - File Share</a>
-<<<<<<< HEAD
-    <div class="d-flex">
-    {% if session.get("user_id") %}
-
-        <span class="text-white me-3 align-self-center">
-            {{ session.get("username") }}
-        </span>
-
-        {% if session.get("level") == 3 %}
-
-        <a class="btn btn-outline-warning btn-sm me-2"
-           href="{{ url_for('admin_users') }}">
-           Admin
-        </a>
-
-        <a class="btn btn-outline-info btn-sm me-2"
-           href="{{ url_for('admin_logs') }}">
-           Logs
-        </a>
-
-        {% endif %}
-
-        <a class="btn btn-outline-light btn-sm"
-           href="{{ url_for('logout') }}">
-           Logout
-        </a>
-
-    {% endif %}
-</div>
-=======
         <div class="d-flex">
             {% if session.get("user_id") %}
                 <span class="text-white me-3 align-self-center">{{ session.get("username") }}</span>
                 {% if session.get("level") == 3 %}
-                <a class="btn btn-outline-warning btn-sm me-2" href="{{ url_for('admin_users') }}">Admin</a>
+                    <a class="btn btn-outline-warning btn-sm me-2" href="{{ url_for('admin_users') }}">Admin</a>
+                    <a class="btn btn-outline-info btn-sm me-2" href="{{ url_for('admin_logs') }}">Logs</a>
                 {% endif %}
                 <a class="btn btn-outline-light btn-sm" href="{{ url_for('logout') }}">Logout</a>
             {% endif %}
         </div>
->>>>>>> 3c564ccc91507ccc90bb6ae001c7cd2126864857
     </div>
 </nav>
 

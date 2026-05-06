@@ -475,7 +475,7 @@ def admin_users():
 
     return render_template("admin_users.html", users_by_level=users_by_level)
 
-<<<<<<< HEAD
+
 @app.route("/admin/logs")
 @login_required
 @admin_required
@@ -498,9 +498,6 @@ def admin_logs():
 
     return render_template("admin_logs.html", logs=logs)
 
-
-=======
->>>>>>> 3c564ccc91507ccc90bb6ae001c7cd2126864857
 
 @app.route("/upload", methods=["POST"])
 @login_required
