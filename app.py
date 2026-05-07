@@ -361,6 +361,7 @@ def init_db():
 
 def log_audit(audit_log: dict, level: str = "info"):
     msg = json.dumps(audit_log, ensure_ascii=False)
+
     if level == "critical":
         audit_logger.critical(msg)
     elif level == "warning":
@@ -370,18 +371,36 @@ def log_audit(audit_log: dict, level: str = "info"):
 
     try:
         db = get_db()
-        details = {k: v for k, v in audit_log.items() if k not in ("timestamp", "event", "username")}
+
+        details = {
+            k: v
+            for k, v in audit_log.items()
+            if k not in ("timestamp", "event", "actor")
+        }
+
         if DB_TYPE == "sqlite":
             db.execute(
                 "INSERT INTO audit_logs (timestamp, event, username, details) VALUES (?, ?, ?, ?)",
-                (audit_log.get("timestamp"), audit_log.get("event"), audit_log.get("username"), json.dumps(details, ensure_ascii=False)),
+                (
+                    audit_log.get("timestamp"),
+                    audit_log.get("event"),
+                    audit_log.get("actor"),
+                    json.dumps(details, ensure_ascii=False),
+                ),
             )
         else:
             db.execute(
                 "INSERT INTO audit_logs (timestamp, event, username, details) VALUES (%s, %s, %s, %s)",
-                (audit_log.get("timestamp"), audit_log.get("event"), audit_log.get("username"), json.dumps(details, ensure_ascii=False)),
+                (
+                    audit_log.get("timestamp"),
+                    audit_log.get("event"),
+                    audit_log.get("actor"),
+                    json.dumps(details, ensure_ascii=False),
+                ),
             )
+
         db.commit()
+
     except Exception as e:
         app_logger.error(f"감사 로그 DB 저장 실패: {e}")
 
@@ -610,12 +629,13 @@ def upload():
 
     log_audit({
         "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
-        "event": "FILE_UPLOADED",
-        "username": session.get("username"),
-        "file_name": filename,
+        "event": "FILE_UPLOAD",
+        "actor": session.get("username"),
+        "owner": session.get("username"),
+        "target": filename,
         "target_levels": target_levels,
         "size_bytes": file_size,
-        "ip": request.remote_addr,
+        "status": "SUCCESS"
     })
 
     db.commit()
