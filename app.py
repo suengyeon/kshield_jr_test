@@ -31,9 +31,8 @@ BASE_DIR = Path(__file__).resolve().parent
 env_path = BASE_DIR / ".env"
 load_dotenv(dotenv_path=env_path)
 
-# 디버깅: 환경 변수 로드 상태 확인
 if not env_path.exists():
-    logging.warning(f"⚠️  .env 파일을 찾을 수 없습니다: {env_path}")
+    logging.warning(f"⚠️ .env 파일을 찾을 수 없습니다: {env_path}")
 else:
     logging.info(f"✓ .env 파일 로드됨: {env_path}")
 
@@ -56,11 +55,12 @@ BUCKET_NAME = os.getenv("S3_BUCKET_NAME", "cloudsec-corp-storage-0501")
 REGION = os.getenv("AWS_DEFAULT_REGION", "ap-northeast-2")
 AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+
 DEFAULT_USERNAME = os.getenv("APP_DEFAULT_USERNAME", "admin")
 DEFAULT_PASSWORD = os.getenv("APP_DEFAULT_PASSWORD", "ChangeMe123!")
+
 AUDIT_LOG_PATH = LOG_DIR / "security_audit.log"
 
-# 환경 변수 로드 확인 (디버깅용)
 ENV_DEBUG = {
     "DB_TYPE": DB_TYPE,
     "DB_HOST": DB_HOST,
@@ -76,10 +76,8 @@ ENV_DEBUG = {
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-secret-change-me")
 
-# CORS 설정
 @app.after_request
 def after_request(response):
-    """CORS 헤더 추가 (같은 도메인/로컬 개발용)"""
     origin = request.headers.get('Origin', '*')
     response.headers['Access-Control-Allow-Origin'] = origin
     response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
@@ -94,11 +92,9 @@ audit_handler = logging.FileHandler(AUDIT_LOG_PATH)
 audit_handler.setFormatter(logging.Formatter("%(message)s"))
 audit_logger.addHandler(audit_handler)
 
-# 상세한 환경 변수 디버깅 로그
 logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
 app_logger = logging.getLogger(__name__)
 
-# 서버 시작 시 환경 변수 상태 출력
 app_logger.info("=" * 70)
 app_logger.info("🚀 Flask 앱 시작 - 환경 변수 진단")
 app_logger.info("=" * 70)
@@ -107,28 +103,25 @@ app_logger.info(f"📁 .env 파일 경로: {env_path}")
 app_logger.info(f"✓ .env 파일 존재: {env_path.exists()}")
 
 if env_path.exists():
-    # .env 파일 읽기
     with open(env_path, 'r') as f:
         env_lines = [line.strip() for line in f.readlines() if line.strip() and not line.startswith('#')]
     app_logger.info(f"✓ .env 파일 라인 수: {len(env_lines)}")
-
-app_logger.info("\n📋 환경 변수 로드 상태:")
-app_logger.info(f"  FLASK_SECRET_KEY: {'✓ 설정됨' if os.getenv('FLASK_SECRET_KEY') else '✗ 미설정'}")
-app_logger.info(f"  AWS_DEFAULT_REGION: {REGION}")
-app_logger.info(f"  S3_BUCKET_NAME: {BUCKET_NAME}")
-app_logger.info(f"  AWS_ACCESS_KEY_ID: {'✓ 로드됨' if AWS_ACCESS_KEY else '✗ 미설정'}")
-app_logger.info(f"  AWS_SECRET_ACCESS_KEY: {'✓ 로드됨' if AWS_SECRET_KEY else '✗ 미설정'}")
-app_logger.info(f"  APP_DEFAULT_USERNAME: {DEFAULT_USERNAME}")
+    app_logger.info("\n📋 환경 변수 로드 상태:")
+    app_logger.info(f"  FLASK_SECRET_KEY: {'✓ 설정됨' if os.getenv('FLASK_SECRET_KEY') else '✗ 미설정'}")
+    app_logger.info(f"  AWS_DEFAULT_REGION: {REGION}")
+    app_logger.info(f"  S3_BUCKET_NAME: {BUCKET_NAME}")
+    app_logger.info(f"  AWS_ACCESS_KEY_ID: {'✓ 로드됨' if AWS_ACCESS_KEY else '✗ 미설정'}")
+    app_logger.info(f"  AWS_SECRET_ACCESS_KEY: {'✓ 로드됨' if AWS_SECRET_KEY else '✗ 미설정'}")
+    app_logger.info(f"  APP_DEFAULT_USERNAME: {DEFAULT_USERNAME}")
 
 if AWS_ACCESS_KEY and AWS_SECRET_KEY:
     app_logger.info("\n✅ AWS 자격증명 로드 완료! S3 업로드 가능합니다.")
 else:
-    app_logger.warning("\n⚠️  AWS 자격증명이 미설정되었습니다!")
-    app_logger.warning("   → .env 파일의 AWS_ACCESS_KEY_ID와 AWS_SECRET_ACCESS_KEY를 확인하세요")
-    app_logger.warning("   → 또는 ~/.aws/credentials 파일을 확인하세요")
+    app_logger.warning("\n⚠️ AWS 자격증명이 미설정되었습니다!")
+    app_logger.warning("  → .env 파일의 AWS_ACCESS_KEY_ID와 AWS_SECRET_ACCESS_KEY를 확인하세요")
+    app_logger.warning("  → 또는 ~/.aws/credentials 파일을 확인하세요")
 
 app_logger.info("=" * 70)
-
 
 
 class DBConnectionWrapper:
@@ -144,7 +137,6 @@ class DBConnectionWrapper:
         if self.db_type == "mysql" and "?" in query:
             query = query.replace("?", "%s")
 
-    # ✅ 커서 생성 로직 (이 부분이 빠져 있었음)
         if self.cursor_factory:
             try:
                 cursor = self.conn.cursor(cursor_factory=self.cursor_factory)
@@ -168,7 +160,6 @@ class DBConnectionWrapper:
 
 
 def get_s3_client():
-    """S3 클라이언트 생성 (명시적 자격증명 또는 IAM 역할 사용)"""
     if AWS_ACCESS_KEY and AWS_SECRET_KEY:
         return boto3.client(
             "s3",
@@ -184,8 +175,8 @@ def connect_sqlite():
     conn.row_factory = sqlite3.Row
     return DBConnectionWrapper(conn, db_type="sqlite")
 
+
 def connect_mysql():
-    # 1. 먼저 DB에 연결합니다.
     conn = mysql.connector.connect(
         host=DB_HOST,
         port=int(DB_PORT),
@@ -194,8 +185,8 @@ def connect_mysql():
         database=DB_NAME,
         auth_plugin='mysql_native_password'
     )
-    # 2. 커서를 생성할 때 딕셔너리 모드를 사용하도록 wrapper에 전달합니다.
     return DBConnectionWrapper(conn, cursor_factory=CMySQLCursorDict, db_type="mysql")
+
 
 def get_db():
     if "db" not in g:
@@ -220,8 +211,7 @@ def init_db():
         db = sqlite3.connect(DB_PATH)
         db.row_factory = sqlite3.Row
         cursor = db.cursor()
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT UNIQUE NOT NULL,
@@ -229,10 +219,8 @@ def init_db():
                 role TEXT NOT NULL DEFAULT 'user',
                 level INTEGER NOT NULL DEFAULT 1
             )
-            """
-        )
-        cursor.execute(
-            """
+        """)
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS files (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 owner_id INTEGER NOT NULL,
@@ -245,18 +233,17 @@ def init_db():
                 FOREIGN KEY(owner_id) REFERENCES users(id),
                 FOREIGN KEY(uploaded_by) REFERENCES users(id)
             )
-            """
-        )
+        """)
+
         columns = {row[1] for row in cursor.execute("PRAGMA table_info(files)").fetchall()}
         if "uploaded_by" not in columns:
             cursor.execute("ALTER TABLE files ADD COLUMN uploaded_by INTEGER")
             cursor.execute("UPDATE files SET uploaded_by = owner_id WHERE uploaded_by IS NULL")
         if "required_level" not in columns:
             cursor.execute("ALTER TABLE files ADD COLUMN required_level INTEGER NOT NULL DEFAULT 1")
-            if "min_level" in columns:
-                cursor.execute("UPDATE files SET required_level = min_level")
+        if "min_level" in columns:
+            cursor.execute("UPDATE files SET required_level = min_level")
         if "allow_lower" in columns:
-            # Migrate from allow_lower to target_levels
             all_files = cursor.execute("SELECT id, required_level, allow_lower FROM files").fetchall()
             for file_row in all_files:
                 required_level = file_row[1]
@@ -272,8 +259,7 @@ def init_db():
         if "required_level" in columns and "target_levels" in columns:
             cursor.execute("UPDATE files SET target_levels = CAST(required_level AS TEXT) WHERE target_levels IS NULL")
 
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS audit_logs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 timestamp TEXT NOT NULL,
@@ -281,8 +267,7 @@ def init_db():
                 username TEXT,
                 details TEXT
             )
-            """
-        )
+        """)
 
         user_columns = {row[1] for row in cursor.execute("PRAGMA table_info(users)").fetchall()}
         if "role" not in user_columns:
@@ -299,16 +284,16 @@ def init_db():
                 (DEFAULT_USERNAME, generate_password_hash(DEFAULT_PASSWORD), "admin", 3),
             )
 
-        admin_user = cursor.execute(
-            "SELECT id FROM users WHERE username = 'admin'"
-        ).fetchone()
+        admin_user = cursor.execute("SELECT id FROM users WHERE username = 'admin'").fetchone()
         if not admin_user:
             cursor.execute(
                 "INSERT INTO users (username, password_hash, role, level) VALUES (?, ?, ?, ?)",
                 ("admin", generate_password_hash(DEFAULT_PASSWORD), "admin", 3),
             )
+
         db.commit()
         db.close()
+
     else:
         db = None
         if DB_TYPE == "mysql":
@@ -319,13 +304,11 @@ def init_db():
                 password=DB_PASSWORD,
                 database=DB_NAME,
             )
-
         if db is None:
             raise ValueError(f"지원하지 않는 DB_TYPE입니다: {DB_TYPE}")
 
         cursor = db.cursor()
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTO_INCREMENT,
                 username VARCHAR(255) UNIQUE NOT NULL,
@@ -333,10 +316,8 @@ def init_db():
                 role VARCHAR(50) NOT NULL DEFAULT 'user',
                 level INTEGER NOT NULL DEFAULT 1
             )
-            """
-        )
-        cursor.execute(
-            """
+        """)
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS files (
                 id INTEGER PRIMARY KEY AUTO_INCREMENT,
                 owner_id INTEGER NOT NULL,
@@ -347,11 +328,8 @@ def init_db():
                 uploaded_at VARCHAR(255) NOT NULL,
                 target_levels VARCHAR(255) NOT NULL DEFAULT '1'
             )
-            """
-        )
-
-        cursor.execute(
-            """
+        """)
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS audit_logs (
                 id INTEGER PRIMARY KEY AUTO_INCREMENT,
                 timestamp VARCHAR(50) NOT NULL,
@@ -359,13 +337,9 @@ def init_db():
                 username VARCHAR(255),
                 details TEXT
             )
-            """
-        )
+        """)
 
-        cursor.execute(
-            "SELECT id FROM users WHERE username = %s",
-            (DEFAULT_USERNAME,)
-        )
+        cursor.execute("SELECT id FROM users WHERE username = %s", (DEFAULT_USERNAME,))
         default_user = cursor.fetchone()
         if not default_user:
             cursor.execute(
@@ -373,9 +347,7 @@ def init_db():
                 (DEFAULT_USERNAME, generate_password_hash(DEFAULT_PASSWORD), "admin", 3),
             )
 
-        cursor.execute(
-            "SELECT id FROM users WHERE username = 'admin'"
-        )
+        cursor.execute("SELECT id FROM users WHERE username = 'admin'")
         admin_user = cursor.fetchone()
         if not admin_user:
             cursor.execute(
@@ -421,25 +393,22 @@ def login_required(view_func):
         if "user_id" not in session:
             return redirect(url_for("login"))
 
+        # ✅ 세션 하이재킹 탐지: 로그인 시 IP와 현재 IP 비교
         original_ip = session.get("login_ip")
         current_ip = request.remote_addr
         if original_ip and original_ip != current_ip:
-            log_audit(
-                {
-                    "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
-                    "event": "SESSION_HIJACK_DETECTED",
-                    "username": session.get("username"),
-                    "original_ip": original_ip,
-                    "current_ip": current_ip,
-                },
-                level="critical",
-            )
+            log_audit({
+                "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
+                "event": "SESSION_HIJACK_DETECTED",
+                "username": session.get("username"),
+                "original_ip": original_ip,
+                "current_ip": current_ip
+            }, level="critical")
             session.clear()
             flash("보안상의 이유로 로그아웃되었습니다.", "danger")
             return redirect(url_for("login"))
 
         return view_func(*args, **kwargs)
-
     return wrapped
 
 
@@ -449,7 +418,6 @@ def admin_required(view_func):
         if session.get("level") != 3:
             abort(403)
         return view_func(*args, **kwargs)
-
     return wrapped
 
 
@@ -457,8 +425,7 @@ def admin_required(view_func):
 @login_required
 def index():
     db = get_db()
-    all_files = db.execute(
-        """
+    all_files = db.execute("""
         SELECT f.id,
                f.owner_id,
                f.original_name,
@@ -469,10 +436,8 @@ def index():
         FROM files f
         LEFT JOIN users u ON f.uploaded_by = u.id
         ORDER BY f.uploaded_at DESC
-        """
-    ).fetchall()
+    """).fetchall()
 
-    # 사용자의 권한에 따라 파일 필터링
     user_level = session.get("level", 1)
     user_id = session.get("user_id")
     filtered_files = []
@@ -480,17 +445,13 @@ def index():
     for file in all_files:
         has_access = False
         if file["owner_id"] == user_id:
-            # 파일 소유자인 경우
             has_access = True
         elif session.get("role") == "admin":
-            # 관리자인 경우
             has_access = True
         else:
-            # target_levels에 포함되는지 확인
             target_levels = [int(l.strip()) for l in file["target_levels"].split(",")]
             if user_level in target_levels:
                 has_access = True
-
         if has_access:
             filtered_files.append(file)
 
@@ -511,42 +472,35 @@ def admin_users():
             return redirect(url_for("admin_users"))
 
         user_row = db.execute(
-            "SELECT id, username, level FROM users WHERE id = ?",
-            (target_id,),
+            "SELECT id, username, level FROM users WHERE id = ?", (target_id,)
         ).fetchone()
+
         if not user_row:
             flash("사용자를 찾을 수 없습니다.", "danger")
             return redirect(url_for("admin_users"))
 
-        db.execute(
-            "UPDATE users SET level = ? WHERE id = ?",
-            (new_level, target_id),
-        )
+        db.execute("UPDATE users SET level = ? WHERE id = ?", (new_level, target_id))
         db.commit()
 
-        audit_log = {
+        log_audit({
             "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
             "event": "ADMIN_ACTION: USER_LEVEL_CHANGED",
             "username": session.get("username"),
             "target_user_id": target_id,
             "target_username": user_row["username"],
             "new_level": new_level,
-        }
-        log_audit(audit_log)
+        })
 
         flash(f"{user_row['username']}님의 레벨이 {new_level}로 변경되었습니다.", "success")
         return redirect(url_for("admin_users"))
 
-    users = db.execute(
-        "SELECT id, username, level FROM users ORDER BY id ASC"
-    ).fetchall()
-
-    # 레벨별로 그룹화
+    users = db.execute("SELECT id, username, level FROM users ORDER BY id ASC").fetchall()
     users_by_level = {}
     for level in [1, 2, 3]:
         users_by_level[level] = [user for user in users if user["level"] == level]
 
     return render_template("admin_users.html", users_by_level=users_by_level)
+
 
 @app.route("/admin/logs")
 @login_required
@@ -555,14 +509,9 @@ def admin_logs():
     logs = []
     try:
         db = get_db()
-        if DB_TYPE == "sqlite":
-            rows = db.execute(
-                "SELECT timestamp, event, username, details FROM audit_logs ORDER BY id DESC LIMIT 100"
-            ).fetchall()
-        else:
-            rows = db.execute(
-                "SELECT timestamp, event, username, details FROM audit_logs ORDER BY id DESC LIMIT 100"
-            ).fetchall()
+        rows = db.execute(
+            "SELECT timestamp, event, username, details FROM audit_logs ORDER BY id DESC LIMIT 100"
+        ).fetchall()
 
         for row in rows:
             entry = {"timestamp": row["timestamp"], "event": row["event"], "username": row["username"]}
@@ -572,9 +521,9 @@ def admin_logs():
             except Exception:
                 pass
             logs.append(entry)
+
     except Exception as e:
         app_logger.error(f"감사 로그 DB 조회 실패: {e}")
-        # DB 조회 실패 시 파일에서 폴백
         try:
             with open(AUDIT_LOG_PATH, "r", encoding="utf-8") as f:
                 for line in reversed(f.readlines()[-100:]):
@@ -586,6 +535,7 @@ def admin_logs():
             pass
 
     return render_template("admin_logs.html", logs=logs)
+
 
 @app.route("/upload", methods=["POST"])
 @login_required
@@ -600,24 +550,20 @@ def upload():
         flash("유효하지 않은 파일명입니다.", "danger")
         return redirect(url_for("index"))
 
-    # Keep original filename for DB/UI and use sanitized name only in S3 object key.
     safe_name_for_key = secure_filename(filename) or "uploaded_file"
     timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")
     s3_key = f"{session['user_id']}/{timestamp}_{safe_name_for_key}"
-    
-    # Get file size before uploading
-    uploaded_file.stream.seek(0, 2)  # Seek to end
+
+    uploaded_file.stream.seek(0, 2)
     file_size = uploaded_file.stream.tell()
-    uploaded_file.stream.seek(0)  # Reset pointer to beginning
-    
+    uploaded_file.stream.seek(0)
+
     try:
         s3 = get_s3_client()
         s3.upload_fileobj(uploaded_file.stream, BUCKET_NAME, s3_key)
     except Exception as e:
-        # S3 연결 에러 상세 로깅
         error_msg = str(e)
         app_logger.error(f"S3 업로드 실패 - {error_msg}")
-        
         if "NoCredentialsError" in str(type(e).__name__):
             flash("AWS 자격증명이 설정되지 않았습니다. .env 파일의 AWS_ACCESS_KEY_ID와 AWS_SECRET_ACCESS_KEY를 확인하세요.", "danger")
         elif "403" in error_msg or "Forbidden" in error_msg:
@@ -626,10 +572,8 @@ def upload():
             flash(f"S3 버킷 '{BUCKET_NAME}'이(가) 존재하지 않습니다.", "danger")
         else:
             flash(f"S3 업로드 중 오류가 발생했습니다: {error_msg}", "danger")
-        
         return redirect(url_for("index"))
 
-    # 접근 허용 레벨 수집
     user_level = session.get("level", 1)
     selected_levels = []
     for level in range(1, 4):
@@ -640,49 +584,40 @@ def upload():
         flash("접근 허용 레벨을 최소 하나 이상 선택해주세요.", "danger")
         return redirect(url_for("index"))
 
-    # 사용자가 자신의 레벨보다 높은 레벨을 선택했는지 확인
     if any(level > user_level for level in selected_levels):
-        audit_log = {
+        log_audit({
             "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
             "event": "UNLAWFUL_LEVEL_ASSIGNMENT",
             "username": session.get("username"),
             "user_level": user_level,
             "requested_levels": ",".join(str(l) for l in selected_levels),
             "file_name": filename,
-        }
-        log_audit(audit_log, level="critical")
+            "ip": request.remote_addr,
+        }, level="critical")
         flash("자신의 권한보다 높은 레벨을 선택할 수 없습니다.", "danger")
         return redirect(url_for("index"))
 
     target_levels = ",".join(str(l) for l in selected_levels)
-
     uploaded_at = datetime.utcnow().isoformat(timespec="seconds")
+
     db = get_db()
     db.execute(
         """
         INSERT INTO files (owner_id, uploaded_by, original_name, s3_key, size_bytes, uploaded_at, target_levels)
         VALUES (?, ?, ?, ?, ?, ?, ?)
         """,
-        (
-            session["user_id"],
-            session["user_id"],
-            filename,
-            s3_key,
-            file_size,
-            uploaded_at,
-            target_levels,
-        ),
+        (session["user_id"], session["user_id"], filename, s3_key, file_size, uploaded_at, target_levels),
     )
 
-    audit_log = {
+    log_audit({
         "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
         "event": "FILE_UPLOADED",
         "username": session.get("username"),
         "file_name": filename,
         "target_levels": target_levels,
         "size_bytes": file_size,
-    }
-    log_audit(audit_log)
+        "ip": request.remote_addr,
+    })
 
     db.commit()
     flash("파일이 업로드되었습니다.", "success")
@@ -706,6 +641,7 @@ def download():
         """,
         (file_id,),
     ).fetchone()
+
     if not file_row:
         flash("잘못된 요청입니다.", "danger")
         return redirect(url_for("index"))
@@ -714,31 +650,26 @@ def download():
     user_id = session.get("user_id")
     is_admin = session.get("role") == "admin"
 
-    # 권한 검증 로직
     has_access = False
     if file_row["owner_id"] == user_id:
-        # 파일 소유자인 경우
         has_access = True
     elif is_admin:
-        # 관리자인 경우
         has_access = True
     else:
-        # target_levels에 포함되는지 확인
         target_levels = [int(l.strip()) for l in file_row["target_levels"].split(",")]
         if user_level in target_levels:
             has_access = True
 
     if not has_access:
-        audit_log = {
+        log_audit({
             "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
             "event": "SECURITY: GRANULAR_ACL_REJECTION",
             "username": session.get("username"),
             "user_level": user_level,
             "allowed_levels": file_row["target_levels"],
             "file_id": file_row["id"],
-            "ip": request.remote_addr,  # ② 접근 거부 시 IP 기록
-        }
-        log_audit(audit_log, level="warning")
+            "ip": request.remote_addr,
+        }, level="warning")
         abort(403)
 
     try:
@@ -747,26 +678,21 @@ def download():
         flash("파일 다운로드 중 오류가 발생했습니다.", "danger")
         return redirect(url_for("index"))
 
-        
-    audit_log = {
+    # ✅ 수정: IP 포함 (Lambda IDOR 탐지용)
+    log_audit({
         "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
         "event": "FILE_DOWNLOADED",
         "username": session.get("username"),
         "file_name": file_row["original_name"],
         "file_id": file_row["id"],
         "ip": request.remote_addr,
-    }
-    log_audit(audit_log)
+    })
 
     filename_header = quote(file_row["original_name"])
     return Response(
         s3_obj["Body"].read(),
         mimetype="application/octet-stream",
-        headers={
-            "Content-Disposition": (
-                f"attachment; filename*=UTF-8''{filename_header}"
-            )
-        },
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename_header}"},
     )
 
 
@@ -781,17 +707,18 @@ def delete():
     db = get_db()
     file_row = db.execute(
         """
-    SELECT f.id,
-       f.s3_key,
-       f.original_name,
-       f.owner_id,
-       u.username AS owner_username
-    FROM files f
-    LEFT JOIN users u ON f.owner_id = u.id
-    WHERE f.id = ?
+        SELECT f.id,
+               f.s3_key,
+               f.original_name,
+               f.owner_id,
+               u.username AS owner_username
+        FROM files f
+        LEFT JOIN users u ON f.owner_id = u.id
+        WHERE f.id = ?
         """,
         (file_id,),
     ).fetchone()
+
     if not file_row:
         flash("파일을 찾을 수 없습니다.", "danger")
         return redirect(url_for("index"))
@@ -805,7 +732,8 @@ def delete():
     except Exception:
         flash("S3 삭제 중 오류가 발생했습니다.", "danger")
         return redirect(url_for("index"))
-    audit_log = {
+
+    log_audit({
         "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
         "event": "FILE_DELETED",
         "username": session.get("username"),
@@ -814,9 +742,7 @@ def delete():
         "owner_id": file_row["owner_id"],
         "owner": file_row["owner_username"],
         "ip": request.remote_addr,
-    }
-    log_audit(audit_log)
-
+    })
 
     db.execute("DELETE FROM files WHERE id = ?", (file_row["id"],))
     db.commit()
@@ -829,6 +755,7 @@ def login():
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
+
         db = get_db()
         user = db.execute(
             "SELECT id, username, password_hash, role, level FROM users WHERE username = ?",
@@ -836,15 +763,13 @@ def login():
         ).fetchone()
 
         if not user or not check_password_hash(user["password_hash"], password):
-            log_audit(
-                {
-                    "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
-                    "event": "LOGIN_FAILED",
-                    "username": username,
-                    "ip": request.remote_addr,
-                },
-                level="warning",
-            )
+            # ✅ 추가: 로그인 실패 로그 (Lambda Brute-force 탐지용)
+            log_audit({
+                "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
+                "event": "LOGIN_FAILED",
+                "username": username,
+                "ip": request.remote_addr,
+            }, level="warning")
             flash("아이디 또는 비밀번호가 올바르지 않습니다.", "danger")
             return render_template("login.html")
 
@@ -853,19 +778,17 @@ def login():
         session["username"] = user["username"]
         session["role"] = user["role"]
         session["level"] = user["level"]
-        session["login_ip"] = request.remote_addr
+        session["login_ip"] = request.remote_addr  # ✅ 추가: IP 저장 (세션 하이재킹 탐지용)
 
-        log_audit(
-            {
-                "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
-                "event": "LOGIN_SUCCESS",
-                "username": user["username"],
-                "ip": request.remote_addr,
-            }
-        )
+        # ✅ 추가: 로그인 성공 로그
+        log_audit({
+            "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
+            "event": "LOGIN_SUCCESS",
+            "username": user["username"],
+            "ip": request.remote_addr,
+        })
 
         return redirect(url_for("index"))
-
     return render_template("login.html")
 
 
@@ -876,19 +799,15 @@ def register():
         password = request.form.get("password", "").strip()
         password_confirm = request.form.get("password_confirm", "").strip()
 
-        # Validation
         if not username or not password:
             flash("아이디와 비밀번호를 입력해주세요.", "danger")
             return render_template("signup.html")
-
         if len(username) < 3:
             flash("아이디는 최소 3글자 이상이어야 합니다.", "danger")
             return render_template("signup.html")
-
         if len(password) < 6:
             flash("비밀번호는 최소 6글자 이상이어야 합니다.", "danger")
             return render_template("signup.html")
-
         if password != password_confirm:
             flash("비밀번호가 일치하지 않습니다.", "danger")
             return render_template("signup.html")
@@ -910,13 +829,12 @@ def register():
             )
             db.commit()
 
-            # 보안 감사 로그 기록
-            audit_log = {
+            log_audit({
                 "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
                 "event": "NEW_USER_REGISTERED",
                 "username": username,
-            }
-            log_audit(audit_log)
+                "ip": request.remote_addr,
+            })
 
             flash("회원가입이 완료되었습니다. 로그인해주세요.", "success")
             return redirect(url_for("login"))
@@ -930,12 +848,17 @@ def register():
 
 @app.route("/logout")
 def logout():
+    log_audit({
+        "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
+        "event": "LOGOUT",
+        "username": session.get("username"),
+        "ip": request.remote_addr,
+    })
     session.clear()
     return redirect(url_for("login"))
 
 
 init_db()
 
-
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    app.run(host="0.0.0.0", port=5000, debug=True)
