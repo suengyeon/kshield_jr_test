@@ -411,6 +411,21 @@ def login_required(view_func):
         if "user_id" not in session:
             return redirect(url_for("login"))
 
+        # ✅ 세션 하이재킹 탐지: 로그인 시 IP와 현재 IP 비교
+        original_ip = session.get("login_ip")
+        current_ip = request.remote_addr
+        if original_ip and original_ip != current_ip:
+            log_audit({
+                "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
+                "event": "SESSION_HIJACK_DETECTED",
+                "username": session.get("username"),
+                "original_ip": original_ip,
+                "current_ip": current_ip
+            }, level="critical")
+            session.clear()
+            flash("보안상의 이유로 로그아웃되었습니다.", "danger")
+            return redirect(url_for("login"))
+
         return view_func(*args, **kwargs)
     return wrapped
 
@@ -654,7 +669,15 @@ def download():
     user_id = session.get("user_id")
     is_admin = session.get("role") == "admin"
 
-    has_access = True  # 취약: 소유자 검증 없음
+    has_access = False
+    if file_row["owner_id"] == user_id:
+        has_access = True
+    elif is_admin:
+        has_access = True
+    else:
+        target_levels = [int(l.strip()) for l in file_row["target_levels"].split(",")]
+        if user_level in target_levels:
+            has_access = True
 
     if not has_access:
         log_audit({
