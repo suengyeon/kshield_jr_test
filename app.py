@@ -360,7 +360,6 @@ def init_db():
 
 
 def log_audit(audit_log: dict, level: str = "info"):
-    """감사 로그를 파일과 DB에 동시에 저장합니다."""
     msg = json.dumps(audit_log, ensure_ascii=False)
     if level == "critical":
         audit_logger.critical(msg)
