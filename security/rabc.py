@@ -27,7 +27,7 @@ def admin_required(view_func):
     @wraps(view_func)
     def wrapped(*args, **kwargs):
 
-        if not has_role("manager"):
+        if not has_role("admin"):  # ✅ 수정: manager → admin
             abort(403)
 
         return view_func(*args, **kwargs)
@@ -56,7 +56,7 @@ def can_download_file(file_row):
     # 일반 사용자
     target_levels = [
         int(l.strip())
-        for l in file_row["target_levels"].split(",")git --version
+        for l in file_row["target_levels"].split(",")  # ✅ 수정: git --version 제거
     ]
 
     user_level = session.get("level", 1)

@@ -25,6 +25,7 @@ from flask import (
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
+from security.rbac import admin_required, can_download_file
 
 # .env 파일 로드 (명시적 경로 지정)
 BASE_DIR = Path(__file__).resolve().parent
@@ -410,18 +411,11 @@ def login_required(view_func):
     def wrapped(*args, **kwargs):
         if "user_id" not in session:
             return redirect(url_for("login"))
-
         return view_func(*args, **kwargs)
     return wrapped
 
-
-def admin_required(view_func):
-    @wraps(view_func)
-    def wrapped(*args, **kwargs):
-        if session.get("level") != 3:
-            abort(403)
-        return view_func(*args, **kwargs)
-    return wrapped
+# ✅ admin_required는 security/rbac.py에서 import
+# 중복 정의 제거됨
 
 
 @app.route("/")
@@ -568,9 +562,9 @@ def upload():
         error_msg = str(e)
         app_logger.error(f"S3 업로드 실패 - {error_msg}")
         if "NoCredentialsError" in str(type(e).__name__):
-            flash("AWS 자격증명이 설정되지 않았습니다. .env 파일의 AWS_ACCESS_KEY_ID와 AWS_SECRET_ACCESS_KEY를 확인하세요.", "danger")
+            flash("AWS 자격증명이 설정되지 않았습니다.", "danger")
         elif "403" in error_msg or "Forbidden" in error_msg:
-            flash("S3 버킷에 대한 접근 권한이 없습니다. IAM 정책을 확인하세요.", "danger")
+            flash("S3 버킷에 대한 접근 권한이 없습니다.", "danger")
         elif "NoSuchBucket" in error_msg:
             flash(f"S3 버킷 '{BUCKET_NAME}'이(가) 존재하지 않습니다.", "danger")
         else:
@@ -654,7 +648,7 @@ def download():
     user_id = session.get("user_id")
     is_admin = session.get("role") == "admin"
 
-    has_access = True  # 취약: 소유자 검증 없음
+    has_access = True  # 취약: 소유자 검증 없음 (IDOR 시나리오)
 
     if not has_access:
         log_audit({
@@ -674,7 +668,6 @@ def download():
         flash("파일 다운로드 중 오류가 발생했습니다.", "danger")
         return redirect(url_for("index"))
 
-    # ✅ 수정: IP 포함 (Lambda IDOR 탐지용)
     log_audit({
         "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
         "event": "FILE_DOWNLOADED",
@@ -759,7 +752,6 @@ def login():
         ).fetchone()
 
         if not user or not check_password_hash(user["password_hash"], password):
-            # ✅ 추가: 로그인 실패 로그 (Lambda Brute-force 탐지용)
             log_audit({
                 "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
                 "event": "LOGIN_FAILED",
@@ -774,9 +766,8 @@ def login():
         session["username"] = user["username"]
         session["role"] = user["role"]
         session["level"] = user["level"]
-        session["login_ip"] = request.remote_addr  # ✅ 추가: IP 저장 (세션 하이재킹 탐지용)
+        session["login_ip"] = request.remote_addr
 
-        # ✅ 추가: 로그인 성공 로그
         log_audit({
             "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
             "event": "LOGIN_SUCCESS",
