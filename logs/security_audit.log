@@ -5,3 +5,5 @@
 {"timestamp": "2026-05-06T07:16:16", "event": "FILE_DELETED", "username": "admin", "file_name": "5/20260506071604630345_txt", "file_id": 19}
 {"timestamp": "2026-05-06T07:21:26", "event": "FILE_DELETED", "username": "admin", "file_name": "2/20260506071329659973_txt", "file_id": 18, "owner_id": 2, "owner": "user1"}
 {"timestamp": "2026-05-06T07:25:43", "event": "FILE_DELETED", "username": "admin", "file_name": "6/20260506070901187922_txt", "file_id": 17, "owner_id": 6, "owner": "user2"}
+{"timestamp": "2026-05-07T04:07:38", "event": "FILE_UPLOAD", "actor": "momo2", "owner": "momo2", "target": "테스트용 파일입니다.txt", "target_levels": "1", "size_bytes": 28, "status": "SUCCESS"}
+{"timestamp": "2026-05-07T04:13:08", "event": "FILE_UPLOAD", "actor": "momo2", "owner": "momo2", "target": "프로젝트 수행계획서.hwp", "target_levels": "1", "size_bytes": 1774592, "status": "SUCCESS"}
