@@ -420,6 +420,24 @@ def login_required(view_func):
     def wrapped(*args, **kwargs):
         if "user_id" not in session:
             return redirect(url_for("login"))
+
+        original_ip = session.get("login_ip")
+        current_ip = request.remote_addr
+        if original_ip and original_ip != current_ip:
+            log_audit(
+                {
+                    "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
+                    "event": "SESSION_HIJACK_DETECTED",
+                    "username": session.get("username"),
+                    "original_ip": original_ip,
+                    "current_ip": current_ip,
+                },
+                level="critical",
+            )
+            session.clear()
+            flash("보안상의 이유로 로그아웃되었습니다.", "danger")
+            return redirect(url_for("login"))
+
         return view_func(*args, **kwargs)
 
     return wrapped
@@ -736,7 +754,7 @@ def download():
         "username": session.get("username"),
         "file_name": file_row["original_name"],
         "file_id": file_row["id"],
-        "ip": session.get("ip", request.remote_addr),  # ② 세션 IP 기록
+        "ip": request.remote_addr,
     }
     log_audit(audit_log)
 
@@ -795,7 +813,7 @@ def delete():
         "file_id": file_row["id"],
         "owner_id": file_row["owner_id"],
         "owner": file_row["owner_username"],
-        "ip": session.get("ip", request.remote_addr),  # ② 세션 IP 기록
+        "ip": request.remote_addr,
     }
     log_audit(audit_log)
 
@@ -818,14 +836,15 @@ def login():
         ).fetchone()
 
         if not user or not check_password_hash(user["password_hash"], password):
-            # ① 로그인 실패 로그 기록
-            audit_log = {
-                "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
-                "event": "LOGIN_FAILED",
-                "username": username,
-                "ip": request.remote_addr,
-            }
-            log_audit(audit_log, level="warning")
+            log_audit(
+                {
+                    "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
+                    "event": "LOGIN_FAILED",
+                    "username": username,
+                    "ip": request.remote_addr,
+                },
+                level="warning",
+            )
             flash("아이디 또는 비밀번호가 올바르지 않습니다.", "danger")
             return render_template("login.html")
 
@@ -834,7 +853,17 @@ def login():
         session["username"] = user["username"]
         session["role"] = user["role"]
         session["level"] = user["level"]
-        session["ip"] = request.remote_addr  # ③ 세션에 클라이언트 IP 저장
+        session["login_ip"] = request.remote_addr
+
+        log_audit(
+            {
+                "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
+                "event": "LOGIN_SUCCESS",
+                "username": user["username"],
+                "ip": request.remote_addr,
+            }
+        )
+
         return redirect(url_for("index"))
 
     return render_template("login.html")
