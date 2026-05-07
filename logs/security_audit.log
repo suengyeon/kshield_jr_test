@@ -3,3 +3,5 @@
 {"timestamp": "2026-05-06T07:13:14", "event": "FILE_DELETED", "username": "admin", "file_name": "5/20260506070822225513_txt", "file_id": 16}
 {"timestamp": "2026-05-06T07:13:29", "event": "FILE_UPLOADED", "username": "user1", "file_name": "공지.txt", "target_levels": "1", "size_bytes": 6}
 {"timestamp": "2026-05-06T07:16:16", "event": "FILE_DELETED", "username": "admin", "file_name": "5/20260506071604630345_txt", "file_id": 19}
+{"timestamp": "2026-05-06T07:21:26", "event": "FILE_DELETED", "username": "admin", "file_name": "2/20260506071329659973_txt", "file_id": 18, "owner_id": 2, "owner": "user1"}
+{"timestamp": "2026-05-06T07:25:43", "event": "FILE_DELETED", "username": "admin", "file_name": "6/20260506070901187922_txt", "file_id": 17, "owner_id": 6, "owner": "user2"}

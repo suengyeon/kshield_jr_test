@@ -718,6 +718,7 @@ def download():
             "user_level": user_level,
             "allowed_levels": file_row["target_levels"],
             "file_id": file_row["id"],
+            "ip": request.remote_addr,  # ② 접근 거부 시 IP 기록
         }
         log_audit(audit_log, level="warning")
         abort(403)
@@ -735,6 +736,7 @@ def download():
         "username": session.get("username"),
         "file_name": file_row["original_name"],
         "file_id": file_row["id"],
+        "ip": session.get("ip", request.remote_addr),  # ② 세션 IP 기록
     }
     log_audit(audit_log)
 
@@ -793,6 +795,7 @@ def delete():
         "file_id": file_row["id"],
         "owner_id": file_row["owner_id"],
         "owner": file_row["owner_username"],
+        "ip": session.get("ip", request.remote_addr),  # ② 세션 IP 기록
     }
     log_audit(audit_log)
 
@@ -815,6 +818,14 @@ def login():
         ).fetchone()
 
         if not user or not check_password_hash(user["password_hash"], password):
+            # ① 로그인 실패 로그 기록
+            audit_log = {
+                "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
+                "event": "LOGIN_FAILED",
+                "username": username,
+                "ip": request.remote_addr,
+            }
+            log_audit(audit_log, level="warning")
             flash("아이디 또는 비밀번호가 올바르지 않습니다.", "danger")
             return render_template("login.html")
 
@@ -823,6 +834,7 @@ def login():
         session["username"] = user["username"]
         session["role"] = user["role"]
         session["level"] = user["level"]
+        session["ip"] = request.remote_addr  # ③ 세션에 클라이언트 IP 저장
         return redirect(url_for("index"))
 
     return render_template("login.html")
@@ -897,4 +909,4 @@ init_db()
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=False)
