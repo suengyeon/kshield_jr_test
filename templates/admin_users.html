@@ -20,7 +20,9 @@
                                 <tr>
                                     <th>ID</th>
                                     <th>이름</th>
+                                    <th>상태</th>
                                     <th>레벨 변경</th>
+                                    <th>계정 잠금</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -28,6 +30,13 @@
                                 <tr>
                                     <td>{{ user['id'] }}</td>
                                     <td>{{ user['username'] }}</td>
+                                    <td>
+                                        {% if user['is_locked'] %}
+                                        <span class="badge bg-danger">잠김</span>
+                                        {% else %}
+                                        <span class="badge bg-success">정상</span>
+                                        {% endif %}
+                                    </td>
                                     <td>
                                         <form method="post" action="{{ url_for('admin_users') }}" class="row gy-2 gx-2 align-items-center">
                                             <input type="hidden" name="user_id" value="{{ user['id'] }}">
@@ -42,6 +51,16 @@
                                                 <button type="submit" class="btn btn-sm btn-primary">변경</button>
                                             </div>
                                         </form>
+                                    </td>
+                                    <td>
+                                        {% if user['is_locked'] %}
+                                        <form method="post" action="{{ url_for('admin_unlock') }}">
+                                            <input type="hidden" name="user_id" value="{{ user['id'] }}">
+                                            <button type="submit" class="btn btn-sm btn-warning">잠금 해제</button>
+                                        </form>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
                                     </td>
                                 </tr>
                                 {% endfor %}

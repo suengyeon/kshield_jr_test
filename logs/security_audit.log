@@ -10,3 +10,6 @@
 {"timestamp": "2026-05-07T04:51:12", "event": "LOGOUT", "username": "admin", "ip": "172.18.0.1"}
 {"timestamp": "2026-05-07T04:51:19", "event": "LOGIN_SUCCESS", "username": "admin", "ip": "172.18.0.1"}
 {"timestamp": "2026-05-07T04:51:25", "event": "FILE_DELETED", "username": "admin", "file_name": "5/20260507041308280466_hwp", "file_id": 24, "owner_id": 5, "owner": "momo2", "ip": "172.18.0.1"}
+{"timestamp": "2026-05-07T07:57:17", "event": "LOGOUT", "username": "admin", "ip": "172.18.0.1"}
+{"timestamp": "2026-05-07T07:57:23", "event": "LOGIN_SUCCESS", "username": "user1", "ip": "172.18.0.1"}
+{"timestamp": "2026-05-07T07:57:49", "event": "FILE_UPLOAD", "actor": "user1", "owner": "user1", "target": "네트워크 기본 이론.txt", "target_levels": "1", "size_bytes": 8594, "status": "SUCCESS"}
