@@ -669,13 +669,15 @@ def download():
         return redirect(url_for("index"))
 
     log_audit({
-        "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
-        "event": "FILE_DOWNLOADED",
-        "username": session.get("username"),
-        "file_name": file_row["original_name"],
-        "file_id": file_row["id"],
-        "ip": request.remote_addr,
-    })
+    "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
+    "event": "FILE_DOWNLOAD",
+    "actor": session.get("username"),
+    "owner": file_row["owner_id"],
+    "target": file_row["original_name"],
+    "file_id": file_row["id"],
+    "ip": request.remote_addr,
+    "status": "SUCCESS"
+})
 
     filename_header = quote(file_row["original_name"])
     return Response(
@@ -723,14 +725,14 @@ def delete():
         return redirect(url_for("index"))
 
     log_audit({
-        "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
-        "event": "FILE_DELETED",
-        "username": session.get("username"),
-        "file_name": file_row["s3_key"],
-        "file_id": file_row["id"],
-        "owner_id": file_row["owner_id"],
-        "owner": file_row["owner_username"],
-        "ip": request.remote_addr,
+    "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
+    "event": "FILE_DELETE",
+    "actor": session.get("username"),
+    "owner": file_row["owner_username"],
+    "target": file_row["original_name"],
+    "file_id": file_row["id"],
+    "ip": request.remote_addr,
+    "status": "SUCCESS"
     })
 
     db.execute("DELETE FROM files WHERE id = ?", (file_row["id"],))
@@ -818,9 +820,11 @@ def register():
 
             log_audit({
                 "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
-                "event": "NEW_USER_REGISTERED",
-                "username": username,
-                "ip": request.remote_addr,
+                "event": "USER_REGISTER",
+                "actor": username,
+                "owner": username,
+                "target": "new_account",
+                "status": "SUCCESS"
             })
 
             flash("회원가입이 완료되었습니다. 로그인해주세요.", "success")

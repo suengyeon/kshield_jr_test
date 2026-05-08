@@ -152,14 +152,12 @@ def after_request(response):
 ### **4) 환경 변수 로드 상태 로깅**
 ```python
 # 서버 시작 시 다음과 같이 출력됨:
-==================================================
 Flask 앱 시작 - 환경 변수 로드 상태:
   DB Path: c:\Users\Admin\cloudsec-app\instance\metadata.db
   S3 Bucket: cloudsec-corp-storage-0501
   AWS Region: ap-northeast-2
   AWS Credentials: ✓ 로드됨
   FLASK_SECRET_KEY: ✓ 설정됨
-==================================================
 ```
 
 ### **5) S3 업로드 에러 메시지 상세화**
