@@ -16,8 +16,9 @@ RUN pip install --upgrade pip setuptools wheel && \
 
 COPY app.py .
 COPY templates/ templates/
+COPY security/ security/
 
-RUN chown -R appuser:appgroup /app
+RUN mkdir -p /app/logs && chown -R appuser:appgroup /app
 USER appuser
 
 ENV FLASK_APP=app.py
