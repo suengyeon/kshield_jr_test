@@ -467,7 +467,7 @@ def download():
 
     db       = get_db()
     file_row = db.execute(
-        "SELECT id, original_name, s3_key, target_levels, owner_id FROM files WHERE id = ?",
+        "SELECT f.id, f.original_name, f.s3_key, f.target_levels, f.owner_id, u.username AS owner_username FROM files f LEFT JOIN users u ON f.owner_id = u.id WHERE f.id = ?",
         (file_id,),
     ).fetchone()
 
@@ -502,6 +502,7 @@ def download():
         "username":  session.get("username"),
         "file_name": file_row["original_name"],
         "file_id":   file_row["id"],
+        "owner":     file_row["owner_username"],
         "ip":        request.headers.get("X-Forwarded-For", request.remote_addr).split(",")[0].strip(),
     })
 

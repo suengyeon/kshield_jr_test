@@ -1,4 +1,3 @@
-
 {% extends "base.html" %}
 
 {% block content %}
@@ -6,10 +5,28 @@
 <div class="card shadow-sm">
 
     <div class="card-header bg-white">
-        <h5 class="mb-0">보안 감사 로그</h5>
+        <h5 class="mb-0">Security Audit Log</h5>
     </div>
 
     <div class="card-body">
+
+        <!-- 필터 버튼 + IP 검색 -->
+        <div class="mb-3 d-flex align-items-center flex-wrap gap-2">
+            <button class="btn btn-sm btn-dark filter-btn active" data-filter="ALL">ALL</button>
+            <button class="btn btn-sm filter-btn" data-filter="FILE_DOWNLOADED" style="background-color:#198754;color:white;opacity:0.4">DOWNLOADED</button>
+            <button class="btn btn-sm filter-btn" data-filter="FILE_UPLOAD" style="background-color:#0d6efd;color:white;opacity:0.4">UPLOAD</button>
+            <button class="btn btn-sm filter-btn" data-filter="DELETED" style="background-color:#6c757d;color:white;opacity:0.4">DELETED</button>
+            <button class="btn btn-sm filter-btn" data-filter="SECURITY" style="background-color:#dc3545;color:white;opacity:0.4">SECURITY</button>
+            <button class="btn btn-sm filter-btn" data-filter="ADMIN" style="background-color:#ffc107;color:black;opacity:0.4">ADMIN</button>
+            <button class="btn btn-sm filter-btn" data-filter="LOGIN" style="background-color:#212529;color:white;opacity:0.4">LOGIN</button>
+            <button class="btn btn-sm filter-btn" data-filter="SESSION_HIJACK" style="background-color:#dc3545;color:white;opacity:0.4">SESSION HIJACK</button>
+
+            <div class="input-group ms-auto" style="max-width:250px;">
+                <span class="input-group-text"><i class="bi bi-search"></i>🔍</span>
+                <input type="text" id="ip-search" class="form-control form-control-sm" placeholder="Search IP...">
+                <button class="btn btn-sm btn-outline-secondary" id="ip-clear">✕</button>
+            </div>
+        </div>
 
         <div class="table-responsive">
 
@@ -24,107 +41,74 @@
                     </tr>
                 </thead>
 
-                <tbody>
+                <tbody id="log-table-body">
 
                 {% for log in logs %}
 
-                    <tr>
+                    <tr class="log-row" data-event="{{ log.event }}" data-ip="{{ log.ip or log.current_ip or '' }}">
+
+                        <td>{{ log.timestamp }}</td>
 
                         <td>
-                            {{ log.timestamp }}
-                        </td>
-
-                        <td>
-
                             <span class="badge
-                            {% if 'SECURITY' in log.event %}
-                                bg-danger
-                            {% elif 'DELETED' in log.event %}
-                                bg-secondary
-                            {% elif 'DOWNLOADED' in log.event %}
-                                bg-success
-                            {% elif 'UPLOADED' in log.event %}
-                                bg-primary
-                            {% elif 'ADMIN' in log.event %}
-                                bg-warning text-dark
-                            {% else %}
-                                bg-dark
-                            {% endif %}
-                            ">
+                            {% if 'SECURITY' in log.event %}bg-danger
+                            {% elif 'DELETED' in log.event %}bg-secondary
+                            {% elif 'DOWNLOADED' in log.event %}bg-success
+                            {% elif 'UPLOAD' in log.event %}bg-primary
+                            {% elif 'ADMIN' in log.event %}bg-warning text-dark
+                            {% elif 'SESSION_HIJACK' in log.event %}bg-danger
+                            {% else %}bg-dark
+                            {% endif %}">
                                 {{ log.event }}
                             </span>
-
                         </td>
 
-                        <td>
-                            {{ log.actor or log.username or log.admin or '-' }}
-                        </td>
+                        <td>{{ log.actor or log.username or log.admin or '-' }}</td>
 
                         <td>
-
                             <div class="small">
 
-                                <div>
-                                    <strong>시간:</strong>
-                                    {{ log.timestamp }}
-                                </div>
-
-                                <div>
-                                    <strong>행위자:</strong>
-                                    {{ log.actor or log.username or log.admin or '-' }}
-                                </div>
-
                                 {% if log.owner %}
-                                <div>
-                                    <strong>파일 소유자:</strong>
-                                    {{ log.owner }}
-                                </div>
+                                <div><strong>File Owner:</strong> {{ log.owner }}</div>
                                 {% endif %}
 
                                 {% if log.file_name %}
-                                <div>
-                                    <strong>파일명:</strong>
-                                    {{ log.file_name }}
-                                </div>
+                                <div><strong>File Name:</strong> {{ log.file_name }}</div>
                                 {% endif %}
 
                                 {% if log.file_id %}
-                                <div>
-                                    <strong>파일 ID:</strong>
-                                    {{ log.file_id }}
-                                </div>
+                                <div><strong>File ID:</strong> {{ log.file_id }}</div>
                                 {% endif %}
 
                                 {% if log.target_levels %}
-                                <div>
-                                    <strong>권한 레벨:</strong>
-                                    {{ log.target_levels }}
-                                </div>
+                                <div><strong>Permission Level:</strong> {{ log.target_levels }}</div>
                                 {% endif %}
 
                                 {% if log.size_bytes %}
-                                <div>
-                                    <strong>파일 크기:</strong>
-                                    {{ log.size_bytes }} bytes
-                                </div>
+                                <div><strong>File Size:</strong> {{ log.size_bytes }} bytes</div>
                                 {% endif %}
 
                                 {% if log.user_level %}
-                                <div>
-                                    <strong>사용자 레벨:</strong>
-                                    {{ log.user_level }}
-                                </div>
+                                <div><strong>User Level:</strong> {{ log.user_level }}</div>
                                 {% endif %}
 
                                 {% if log.allowed_levels %}
-                                <div>
-                                    <strong>허용 레벨:</strong>
-                                    {{ log.allowed_levels }}
-                                </div>
+                                <div><strong>Allowed Levels:</strong> {{ log.allowed_levels }}</div>
+                                {% endif %}
+
+                                {% if log.ip %}
+                                <div><strong>IP:</strong> {{ log.ip }}</div>
+                                {% endif %}
+
+                                {% if log.original_ip %}
+                                <div><strong>Original IP:</strong> {{ log.original_ip }}</div>
+                                {% endif %}
+
+                                {% if log.current_ip %}
+                                <div><strong>Attacker IP:</strong> {{ log.current_ip }}</div>
                                 {% endif %}
 
                             </div>
-
                         </td>
 
                     </tr>
@@ -140,5 +124,67 @@
     </div>
 
 </div>
+
+<script>
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const activeFilters = new Set(['ALL']);
+    let ipFilter = '';
+
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const filter = btn.dataset.filter;
+
+            if (filter === 'ALL') {
+                activeFilters.clear();
+                activeFilters.add('ALL');
+                filterBtns.forEach(b => {
+                    b.style.opacity = b.dataset.filter === 'ALL' ? '1' : '0.4';
+                });
+            } else {
+                activeFilters.delete('ALL');
+                document.querySelector('[data-filter="ALL"]').style.opacity = '0.4';
+
+                if (activeFilters.has(filter)) {
+                    activeFilters.delete(filter);
+                    btn.style.opacity = '0.4';
+                } else {
+                    activeFilters.add(filter);
+                    btn.style.opacity = '1';
+                }
+
+                if (activeFilters.size === 0) {
+                    activeFilters.add('ALL');
+                    document.querySelector('[data-filter="ALL"]').style.opacity = '1';
+                }
+            }
+
+            applyFilter();
+        });
+    });
+
+    document.getElementById('ip-search').addEventListener('input', function() {
+        ipFilter = this.value.trim().toLowerCase();
+        applyFilter();
+    });
+
+    document.getElementById('ip-clear').addEventListener('click', function() {
+        document.getElementById('ip-search').value = '';
+        ipFilter = '';
+        applyFilter();
+    });
+
+    function applyFilter() {
+        const rows = document.querySelectorAll('.log-row');
+        rows.forEach(row => {
+            const event = row.dataset.event;
+            const ip = row.dataset.ip.toLowerCase();
+
+            const eventMatch = activeFilters.has('ALL') || [...activeFilters].some(f => event.includes(f));
+            const ipMatch = ipFilter === '' || ip.includes(ipFilter);
+
+            row.style.display = (eventMatch && ipMatch) ? '' : 'none';
+        });
+    }
+</script>
 
 {% endblock %}

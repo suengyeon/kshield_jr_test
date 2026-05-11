@@ -367,3 +367,5 @@
 {"timestamp": "2026-05-11T05:49:56", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "개인정보_파기_확인서.docx", "file_id": 4, "ip": "182.208.176.30"}
 {"timestamp": "2026-05-11T05:49:56", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "VPN_접속_허용_리스트.hwp", "file_id": 1, "ip": "182.208.176.30"}
 {"timestamp": "2026-05-11T05:49:56", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "주간_보안_위협_동향.txt", "file_id": 10, "ip": "182.208.176.30"}
+{"timestamp": "2026-05-11T12:58:43", "event": "LOGIN_SUCCESS", "username": "admin", "ip": "218.236.61.177"}
+{"timestamp": "2026-05-11T13:05:28", "event": "FILE_DOWNLOADED", "username": "admin", "file_name": "테스트용 파일입니다.txt", "file_id": 20, "owner": "momo6", "ip": "218.236.61.177"}
