@@ -59,8 +59,37 @@ audit_handler = logging.FileHandler(AUDIT_LOG_PATH)
 audit_handler.setFormatter(logging.Formatter("%(message)s"))
 audit_logger.addHandler(audit_handler)
 
+# ✅ CloudWatch 핸들러 추가
+class CloudWatchHandler(logging.Handler):
+    def __init__(self):
+        super().__init__()
+        import boto3, threading
+        self.client = boto3.client("logs", region_name="ap-northeast-2")
+        self.log_group = "/cloudsec/audit"
+        self.stream_name = "ec2-app"
+        self._lock = threading.Lock()
+    def emit(self, record):
+        import threading, time
+        def send():
+            try:
+                self.client.put_log_events(
+                    logGroupName=self.log_group,
+                    logStreamName=self.stream_name,
+                    logEvents=[{"timestamp": int(time.time()*1000), "message": self.format(record)}]
+                )
+            except Exception:
+                pass
+        threading.Thread(target=send, daemon=True).start()
+
+cw_handler = CloudWatchHandler()
+cw_handler.setFormatter(logging.Formatter("%(message)s"))
+audit_logger.addHandler(cw_handler)
+
 app_logger.info(f"Flask 앱 시작 | DB={DB_TYPE} | Bucket={BUCKET_NAME} | Region={REGION}")
 
+# ── IP 추출 헬퍼 함수 ──────────────────────────────────────────────────────
+def get_client_ip():
+    return request.headers.get("X-Forwarded-For", request.remote_addr).split(",")[0].strip()
 
 # ── CORS 헤더 ──────────────────────────────────────────────────────────────
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "").split(",")
@@ -143,7 +172,8 @@ def init_db():
                 username      VARCHAR(255) UNIQUE NOT NULL,
                 password_hash VARCHAR(255) NOT NULL,
                 role          VARCHAR(50)  NOT NULL DEFAULT 'user',
-                level         INTEGER      NOT NULL DEFAULT 1
+                level         INTEGER      NOT NULL DEFAULT 1,
+                is_locked     TINYINT      NOT NULL DEFAULT 0
             )
         """)
         cursor.execute("""
@@ -186,7 +216,8 @@ def init_db():
                 username TEXT UNIQUE NOT NULL,
                 password_hash TEXT NOT NULL,
                 role TEXT NOT NULL DEFAULT 'user',
-                level INTEGER NOT NULL DEFAULT 1
+                level INTEGER NOT NULL DEFAULT 1,
+                is_locked INTEGER NOT NULL DEFAULT 0
             )
         """)
         cursor.execute("""
@@ -230,7 +261,8 @@ def log_audit(audit_log: dict, level: str = "info"):
         db.execute(
             "INSERT INTO audit_logs (timestamp, event, username, details) VALUES (?, ?, ?, ?)",
             (audit_log.get("timestamp"), audit_log.get("event"),
-             audit_log.get("actor"), json.dumps(details, ensure_ascii=False)),
+             audit_log.get("username") or audit_log.get("actor"),
+             json.dumps(details, ensure_ascii=False)),
         )
         db.commit()
     except Exception as e:
@@ -244,9 +276,9 @@ def login_required(view_func):
         if "user_id" not in session:
             return redirect(url_for("login"))
 
-        # ✅ 세션 하이재킹 탐지: 로그인 IP와 현재 IP 비교
+        # ✅ 세션 하이재킹 탐지
         original_ip = session.get("login_ip")
-        current_ip  = request.remote_addr
+        current_ip  = get_client_ip()
         if original_ip and original_ip != current_ip:
             log_audit({
                 "timestamp":   datetime.utcnow().isoformat(timespec="seconds"),
@@ -261,8 +293,6 @@ def login_required(view_func):
 
         return view_func(*args, **kwargs)
     return wrapped
-
-# admin_required는 security/rbac.py 에서 import
 
 
 # ── 라우트 ─────────────────────────────────────────────────────────────────
@@ -300,13 +330,11 @@ def admin_unlock():
     if not target_id:
         flash("잘못된 요청입니다.", "danger")
         return redirect(url_for("admin_users"))
-
     db = get_db()
     user_row = db.execute("SELECT id, username FROM users WHERE id = ?", (target_id,)).fetchone()
     if not user_row:
         flash("사용자를 찾을 수 없습니다.", "danger")
         return redirect(url_for("admin_users"))
-
     db.execute("UPDATE users SET is_locked = 0 WHERE id = ?", (target_id,))
     db.commit()
     log_audit({
@@ -432,7 +460,7 @@ def upload():
             "user_level":       user_level,
             "requested_levels": ",".join(str(l) for l in selected_levels),
             "file_name":        filename,
-            "ip":               request.remote_addr,
+            "ip":               get_client_ip(),
         }, level="critical")
         flash("자신의 권한보다 높은 레벨을 선택할 수 없습니다.", "danger")
         return redirect(url_for("index"))
@@ -498,7 +526,7 @@ def download():
             "user_level":     user_level,
             "allowed_levels": file_row["target_levels"],
             "file_id":        file_row["id"],
-            "ip":             request.remote_addr,
+            "ip":             get_client_ip(),
         }, level="warning")
         abort(403)
 
@@ -514,7 +542,7 @@ def download():
         "username":  session.get("username"),
         "file_name": file_row["original_name"],
         "file_id":   file_row["id"],
-        "ip":        request.remote_addr,
+        "ip":        get_client_ip(),
     })
 
     filename_header = quote(file_row["original_name"])
@@ -562,7 +590,7 @@ def delete():
         "file_id":   file_row["id"],
         "owner_id":  file_row["owner_id"],
         "owner":     file_row["owner_username"],
-        "ip":        request.remote_addr,
+        "ip":        get_client_ip(),
     })
     db.execute("DELETE FROM files WHERE id = ?", (file_row["id"],))
     db.commit()
@@ -586,18 +614,29 @@ def login():
                 "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
                 "event":     "LOGIN_FAILED",
                 "username":  username,
-                "ip":        request.remote_addr,
+                "ip":        get_client_ip(),
             }, level="warning")
             flash("아이디 또는 비밀번호가 올바르지 않습니다.", "danger")
+            # ✅ 계정 자동 잠금 (1분 내 10회 실패 시)
+            try:
+                fail_count = db.execute(
+                    "SELECT COUNT(*) as cnt FROM audit_logs WHERE username = ? AND event = 'LOGIN_FAILED' AND timestamp >= NOW() - INTERVAL 1 MINUTE",
+                    (username,)
+                ).fetchone()["cnt"]
+                if fail_count >= 10:
+                    db.execute("UPDATE users SET is_locked = 1 WHERE username = ?", (username,))
+                    db.commit()
+            except Exception as e:
+                app_logger.error(f"계정 잠금 처리 실패: {e}")
             return render_template("login.html")
 
-        # ✅ 계정 잠금 확인 (After)
+        # ✅ 계정 잠금 확인
         if user["is_locked"]:
             log_audit({
                 "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
                 "event":     "LOGIN_BLOCKED_LOCKED_ACCOUNT",
                 "username":  username,
-                "ip":        request.remote_addr,
+                "ip":        get_client_ip(),
             }, level="warning")
             flash("계정이 잠겨 있습니다. 관리자에게 문의하세요.", "danger")
             return render_template("login.html")
@@ -607,13 +646,13 @@ def login():
         session["username"] = user["username"]
         session["role"]     = user["role"]
         session["level"]    = user["level"]
-        session["login_ip"] = request.remote_addr  # ✅ 세션 하이재킹 탐지용 IP 저장
+        session["login_ip"] = get_client_ip()  # ✅ 세션 하이재킹 탐지용 IP 저장
 
         log_audit({
             "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
             "event":     "LOGIN_SUCCESS",
             "username":  user["username"],
-            "ip":        request.remote_addr,
+            "ip":        get_client_ip(),
         })
         return redirect(url_for("index"))
     return render_template("login.html")
@@ -654,7 +693,7 @@ def register():
                 "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
                 "event":     "NEW_USER_REGISTERED",
                 "username":  username,
-                "ip":        request.remote_addr,
+                "ip":        get_client_ip(),
             })
             flash("회원가입이 완료되었습니다. 로그인해주세요.", "success")
             return redirect(url_for("login"))
@@ -671,7 +710,7 @@ def logout():
         "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
         "event":     "LOGOUT",
         "username":  session.get("username"),
-        "ip":        request.remote_addr,
+        "ip":        get_client_ip(),
     })
     session.clear()
     return redirect(url_for("login"))
