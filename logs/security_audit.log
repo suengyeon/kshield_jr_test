@@ -369,3 +369,41 @@
 {"timestamp": "2026-05-11T05:49:56", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "주간_보안_위협_동향.txt", "file_id": 10, "ip": "182.208.176.30"}
 {"timestamp": "2026-05-11T12:58:43", "event": "LOGIN_SUCCESS", "username": "admin", "ip": "218.236.61.177"}
 {"timestamp": "2026-05-11T13:05:28", "event": "FILE_DOWNLOADED", "username": "admin", "file_name": "테스트용 파일입니다.txt", "file_id": 20, "owner": "momo6", "ip": "218.236.61.177"}
+{"timestamp": "2026-05-12T00:54:13", "event": "LOGOUT", "username": "admin", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T00:54:19", "event": "LOGIN_SUCCESS", "username": "momo2", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T00:54:26", "event": "LOGOUT", "username": "momo2", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T00:54:32", "event": "LOGIN_FAILED", "username": "momo2", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T00:54:36", "event": "LOGIN_FAILED", "username": "momo2", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T00:54:40", "event": "LOGIN_FAILED", "username": "momo2", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T00:54:43", "event": "LOGIN_FAILED", "username": "momo2", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T00:54:47", "event": "LOGIN_FAILED", "username": "momo2", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T00:54:50", "event": "LOGIN_FAILED", "username": "momo2", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T00:54:53", "event": "LOGIN_FAILED", "username": "momo2", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T00:54:58", "event": "LOGIN_FAILED", "username": "momo2", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T00:55:01", "event": "LOGIN_FAILED", "username": "momo2", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T00:55:05", "event": "LOGIN_FAILED", "username": "momo2", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T00:55:41", "event": "LOGIN_FAILED", "username": "momo6", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T00:57:16", "event": "LOGIN_SUCCESS", "username": "admin", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T01:22:57", "event": "LOGIN_FAILED", "username": "admin", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T01:28:16", "event": "LOGIN_SUCCESS", "username": "momo6", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T01:28:22", "event": "FILE_DOWNLOADED", "username": "momo6", "file_name": "테스트용 파일입니다.txt", "file_id": 20, "owner": "momo6", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T01:30:22", "event": "FILE_DOWNLOADED", "username": "momo6", "file_name": "테스트용 파일입니다.txt", "file_id": 20, "owner": "momo6", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T01:31:54", "event": "FILE_DOWNLOADED", "username": "momo6", "file_name": "VPN_접속_허용_리스트.hwp", "file_id": 1, "owner": "Group001", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T03:52:29", "event": "LOGIN_FAILED", "username": "admin", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T03:52:38", "event": "LOGIN_SUCCESS", "username": "admin", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T04:13:20", "event": "NEW_USER_REGISTERED", "username": "User", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T04:14:00", "event": "LOGIN_SUCCESS", "username": "User", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T04:16:01", "event": "LOGOUT", "username": "User", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T04:16:15", "event": "LOGIN_FAILED", "username": "User", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T04:16:22", "event": "LOGIN_FAILED", "username": "User123", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T04:16:33", "event": "LOGIN_SUCCESS", "username": "User", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T04:17:11", "event": "LOGOUT", "username": "User", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T04:20:03", "event": "LOGIN_FAILED", "username": "Admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T04:20:17", "event": "LOGOUT", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T04:20:24", "event": "LOGIN_SUCCESS", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T04:21:03", "event": "NEW_USER_REGISTERED", "username": "Manager", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T04:21:52", "event": "LOGIN_SUCCESS", "username": "Manager", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T04:22:31", "event": "LOGOUT", "username": "Manager", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T04:29:21", "event": "LOGIN_SUCCESS", "username": "User", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T04:31:20", "event": "FILE_UPLOAD", "actor": "User", "target": "VPN_접속_허용_리스트.hwp", "target_levels": "1", "size_bytes": 19456, "status": "SUCCESS"}
+{"timestamp": "2026-05-12T04:31:55", "event": "FILE_DOWNLOADED", "username": "User", "file_name": "VPN_접속_허용_리스트.hwp", "file_id": 21, "owner": "User", "ip": "10.0.1.31"}
