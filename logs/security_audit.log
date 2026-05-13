@@ -407,3 +407,280 @@
 {"timestamp": "2026-05-12T04:29:21", "event": "LOGIN_SUCCESS", "username": "User", "ip": "10.0.1.31"}
 {"timestamp": "2026-05-12T04:31:20", "event": "FILE_UPLOAD", "actor": "User", "target": "VPN_접속_허용_리스트.hwp", "target_levels": "1", "size_bytes": 19456, "status": "SUCCESS"}
 {"timestamp": "2026-05-12T04:31:55", "event": "FILE_DOWNLOADED", "username": "User", "file_name": "VPN_접속_허용_리스트.hwp", "file_id": 21, "owner": "User", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T04:33:24", "event": "FILE_DOWNLOADED", "username": "User", "file_name": "VPN_접속_허용_리스트.hwp", "file_id": 21, "owner": "User", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T04:34:59", "event": "FILE_DELETED", "username": "User", "file_name": "15/20260512043119319994_VPN___.hwp", "file_id": 21, "owner_id": 15, "owner": "User", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T04:36:40", "event": "LOGOUT", "username": "User", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T04:37:30", "event": "LOGIN_SUCCESS", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T04:38:53", "event": "ADMIN_ACTION: USER_LEVEL_CHANGED", "username": "admin", "target_user_id": 16, "target_username": "Manager", "new_level": 2}
+{"timestamp": "2026-05-12T04:39:48", "event": "LOGOUT", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T04:40:15", "event": "LOGIN_SUCCESS", "username": "User", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T04:40:52", "event": "FILE_UPLOAD", "actor": "User", "target": "주간_보안_위협_동향.txt", "target_levels": "1", "size_bytes": 409, "status": "SUCCESS"}
+{"timestamp": "2026-05-12T04:41:34", "event": "LOGOUT", "username": "User", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T04:41:46", "event": "LOGIN_SUCCESS", "username": "Manager", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T04:42:23", "event": "FILE_UPLOAD", "actor": "Manager", "target": "모의해킹_시나리오_기획.txt", "target_levels": "2", "size_bytes": 213, "status": "SUCCESS"}
+{"timestamp": "2026-05-12T04:42:34", "event": "LOGOUT", "username": "Manager", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T04:42:44", "event": "LOGIN_SUCCESS", "username": "User", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T04:43:00", "event": "LOGOUT", "username": "User", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T04:43:08", "event": "LOGIN_SUCCESS", "username": "Manager", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T04:43:27", "event": "LOGOUT", "username": "Manager", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T04:43:39", "event": "LOGIN_SUCCESS", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T04:44:23", "event": "FILE_UPLOAD", "actor": "admin", "target": "신규_방화벽_정책_설정안.txt", "target_levels": "3", "size_bytes": 274, "status": "SUCCESS"}
+{"timestamp": "2026-05-12T04:45:54", "event": "FILE_UPLOAD", "actor": "admin", "target": "취약점_점검_체크리스트.csv", "target_levels": "1,2,3", "size_bytes": 353, "status": "SUCCESS"}
+{"timestamp": "2026-05-12T04:47:20", "event": "LOGOUT", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T04:47:32", "event": "LOGIN_SUCCESS", "username": "Manager", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T04:48:05", "event": "FILE_UPLOAD", "actor": "Manager", "target": "개인정보_파기_확인서.docx", "target_levels": "1,2", "size_bytes": 13962, "status": "SUCCESS"}
+{"timestamp": "2026-05-12T04:49:32", "event": "LOGOUT", "username": "Manager", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T04:49:48", "event": "LOGIN_SUCCESS", "username": "User", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T04:50:50", "event": "FILE_DOWNLOADED", "username": "User", "file_name": "개인정보_파기_확인서.docx", "file_id": 26, "owner": "Manager", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T04:51:06", "event": "FILE_DOWNLOADED", "username": "User", "file_name": "개인정보_파기_확인서.docx", "file_id": 26, "owner": "Manager", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T04:52:59", "event": "FILE_DOWNLOADED", "username": "User", "file_name": "취약점_점검_체크리스트.csv", "file_id": 25, "owner": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T04:55:09", "event": "LOGOUT", "username": "User", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T04:55:21", "event": "LOGIN_SUCCESS", "username": "Manager", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T04:57:40", "event": "LOGOUT", "username": "Manager", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T04:57:52", "event": "LOGIN_SUCCESS", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:04:35", "event": "LOGOUT", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:04:45", "event": "LOGIN_SUCCESS", "username": "User", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:06:32", "event": "LOGOUT", "username": "User", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:06:43", "event": "LOGIN_SUCCESS", "username": "Manager", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:10:17", "event": "LOGOUT", "username": "Manager", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:33:52", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:34:08", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:34:08", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:34:08", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:34:09", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:34:09", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:34:09", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:34:09", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:34:09", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:34:09", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:34:09", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:34:09", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:34:11", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:34:11", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:34:11", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:34:11", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:34:11", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:34:11", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:34:11", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:34:11", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:34:11", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:34:58", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:34:58", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:34:58", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:34:58", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:34:58", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:34:59", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:34:59", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:34:59", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:34:59", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:34:59", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:35:01", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:35:01", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:35:01", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:35:01", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:35:01", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:35:01", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:35:01", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:35:01", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:35:01", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:35:01", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:35:27", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:35:28", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:35:28", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:35:28", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:35:28", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:35:28", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:35:28", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:35:28", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:35:28", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:35:28", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:35:30", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:35:30", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:35:31", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:35:31", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:35:31", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:35:31", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:35:31", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:35:31", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:35:31", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:35:31", "event": "LOGIN_FAILED", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:38:40", "event": "LOGIN_FAILED", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:38:40", "event": "LOGIN_FAILED", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:38:40", "event": "LOGIN_FAILED", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:38:40", "event": "LOGIN_FAILED", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:38:40", "event": "LOGIN_FAILED", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:38:40", "event": "LOGIN_FAILED", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:38:40", "event": "LOGIN_FAILED", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:38:45", "event": "LOGIN_FAILED", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:38:45", "event": "LOGIN_FAILED", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:38:45", "event": "LOGIN_FAILED", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:38:45", "event": "LOGIN_FAILED", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:38:45", "event": "LOGIN_FAILED", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:38:45", "event": "LOGIN_FAILED", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:38:45", "event": "LOGIN_FAILED", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:38:45", "event": "LOGIN_FAILED", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:38:45", "event": "LOGIN_FAILED", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:38:45", "event": "LOGIN_FAILED", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:38:45", "event": "LOGIN_FAILED", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:38:45", "event": "LOGIN_FAILED", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:38:45", "event": "LOGIN_FAILED", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:39:25", "event": "LOGIN_SUCCESS", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:47:28", "event": "LOGOUT", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:47:48", "event": "NEW_USER_REGISTERED", "username": "user2", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:48:27", "event": "ADMIN_ACTION: USER_LEVEL_CHANGED", "username": "admin", "target_user_id": 17, "target_username": "user2", "new_level": 2}
+{"timestamp": "2026-05-12T05:48:28", "event": "LOGIN_SUCCESS", "username": "user2", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:48:42", "event": "LOGOUT", "username": "user2", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:49:13", "event": "LOGOUT", "username": "momo6", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:49:30", "event": "LOGIN_SUCCESS", "username": "user2", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:49:54", "event": "FILE_UPLOAD", "actor": "user2", "target": "테스트용 파일입니다.txt", "target_levels": "2", "size_bytes": 28, "status": "SUCCESS"}
+{"timestamp": "2026-05-12T05:50:25", "event": "LOGOUT", "username": "user2", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:50:41", "event": "LOGIN_SUCCESS", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:51:15", "event": "FILE_DOWNLOADED", "username": "admin", "file_name": "테스트용 파일입니다.txt", "file_id": 27, "owner": "user2", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:51:42", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "테스트용 파일입니다.txt", "file_id": 27, "owner": "user2", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:52:16", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "테스트용 파일입니다.txt", "file_id": 27, "owner": "user2", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:56:02", "event": "LOGIN_SUCCESS", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:56:03", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "모의해킹_시나리오_기획.txt", "file_id": 5, "owner": "Group002", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:56:03", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "네트워크_장비_목록.xlsx", "file_id": 2, "owner": "Group001", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:56:03", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "악성코드_샘플_분석_노트.txt", "file_id": 7, "owner": "Group003", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:56:03", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "보안_솔루션_도입_예산안.xlsx", "file_id": 3, "owner": "Group001", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:56:03", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "신규_방화벽_정책_설정안.txt", "file_id": 6, "owner": "Group003", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:56:24", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "외부인_출입_신청서_양식.docx", "file_id": 9, "owner": "Group004", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:56:24", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "개인정보_파기_확인서.docx", "file_id": 4, "owner": "Group002", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:56:24", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "암호화_알고리즘_표준_지침.docx", "file_id": 8, "owner": "Group004", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:56:24", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "주간_보안_위협_동향.txt", "file_id": 10, "owner": "User001", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:56:24", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "VPN_접속_허용_리스트.hwp", "file_id": 1, "owner": "Group001", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:56:53", "event": "LOGIN_SUCCESS", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:56:53", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "암호화_알고리즘_표준_지침.docx", "file_id": 8, "owner": "Group004", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:56:53", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "네트워크_장비_목록.xlsx", "file_id": 2, "owner": "Group001", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:56:53", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "개인정보_파기_확인서.docx", "file_id": 4, "owner": "Group002", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:56:53", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "신규_방화벽_정책_설정안.txt", "file_id": 6, "owner": "Group003", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:56:53", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "외부인_출입_신청서_양식.docx", "file_id": 9, "owner": "Group004", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:56:53", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "악성코드_샘플_분석_노트.txt", "file_id": 7, "owner": "Group003", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:56:53", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "모의해킹_시나리오_기획.txt", "file_id": 5, "owner": "Group002", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:57:14", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "VPN_접속_허용_리스트.hwp", "file_id": 1, "owner": "Group001", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:57:14", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "보안_솔루션_도입_예산안.xlsx", "file_id": 3, "owner": "Group001", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:57:14", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "주간_보안_위협_동향.txt", "file_id": 10, "owner": "User001", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:57:40", "event": "LOGIN_SUCCESS", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:57:41", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "네트워크_장비_목록.xlsx", "file_id": 2, "owner": "Group001", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:57:41", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "주간_보안_위협_동향.txt", "file_id": 10, "owner": "User001", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:57:41", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "개인정보_파기_확인서.docx", "file_id": 4, "owner": "Group002", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:57:41", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "암호화_알고리즘_표준_지침.docx", "file_id": 8, "owner": "Group004", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:57:41", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "모의해킹_시나리오_기획.txt", "file_id": 5, "owner": "Group002", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:58:02", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "VPN_접속_허용_리스트.hwp", "file_id": 1, "owner": "Group001", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:58:02", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "악성코드_샘플_분석_노트.txt", "file_id": 7, "owner": "Group003", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:58:02", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "보안_솔루션_도입_예산안.xlsx", "file_id": 3, "owner": "Group001", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:58:02", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "신규_방화벽_정책_설정안.txt", "file_id": 6, "owner": "Group003", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:58:02", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "외부인_출입_신청서_양식.docx", "file_id": 9, "owner": "Group004", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:59:04", "event": "LOGOUT", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:59:12", "event": "LOGIN_SUCCESS", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:59:15", "event": "LOGOUT", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T05:59:22", "event": "LOGIN_SUCCESS", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T06:03:25", "event": "LOGOUT", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T06:04:53", "event": "LOGIN_SUCCESS", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T06:08:04", "event": "LOGOUT", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T06:08:10", "event": "LOGIN_SUCCESS", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T06:08:33", "event": "LOGOUT", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T06:08:38", "event": "LOGIN_SUCCESS", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T06:22:18", "event": "LOGIN_FAILED", "username": "user2", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T06:22:26", "event": "LOGIN_SUCCESS", "username": "user2", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T06:35:01", "event": "LOGOUT", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T06:35:07", "event": "LOGIN_SUCCESS", "username": "admin", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T06:46:42", "event": "LOGOUT", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T06:46:50", "event": "LOGIN_SUCCESS", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T06:47:30", "event": "LOGOUT", "username": "user1", "ip": "10.0.1.31"}
+{"timestamp": "2026-05-12T07:24:19", "event": "SESSION_HIJACK_DETECTED", "username": "admin", "original_ip": "10.0.1.31", "current_ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:25:18", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:25:18", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:25:40", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:25:40", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:25:41", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:26:02", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:26:03", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:26:03", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:33:10", "event": "LOGIN_SUCCESS", "username": "admin", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:40:46", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:40:46", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:40:46", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:40:46", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:40:46", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:40:46", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:40:46", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:40:46", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:40:47", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:40:50", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:40:50", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:40:50", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:40:50", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:40:50", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:40:50", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:40:50", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:40:50", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:40:50", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:40:50", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:40:50", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:52:04", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:52:04", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:52:04", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:52:04", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:52:04", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:52:05", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:52:05", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:52:09", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:52:09", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:52:09", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:52:09", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:52:09", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:52:09", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:52:09", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:52:09", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:52:09", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:52:09", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:52:09", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:52:09", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:52:09", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T07:53:15", "event": "ADMIN_ACTION: ACCOUNT_UNLOCKED", "username": "admin", "target_username": "user1"}
+{"timestamp": "2026-05-12T08:11:43", "event": "LOGIN_FAILED", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T08:11:55", "event": "LOGIN_SUCCESS", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T08:12:48", "event": "SECURITY: GRANULAR_ACL_REJECTION", "username": "user1", "user_level": 1, "allowed_levels": "2", "file_id": 27, "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T08:22:11", "event": "FILE_DOWNLOADED", "username": "admin", "file_name": "테스트용 파일입니다.txt", "file_id": 27, "owner": "user2", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T08:22:37", "event": "LOGOUT", "username": "admin", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T08:22:45", "event": "LOGIN_SUCCESS", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T08:22:50", "event": "SECURITY: GRANULAR_ACL_REJECTION", "username": "user1", "user_level": 1, "allowed_levels": "2", "file_id": 27, "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T08:28:52", "event": "SECURITY: GRANULAR_ACL_REJECTION", "username": "user1", "user_level": 1, "allowed_levels": "2", "file_id": 27, "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T08:29:12", "event": "SESSION_HIJACK_DETECTED", "username": "user1", "original_ip": "10.0.1.31", "current_ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T08:29:12", "event": "SESSION_HIJACK_DETECTED", "username": "user1", "original_ip": "10.0.1.31", "current_ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T08:29:12", "event": "SESSION_HIJACK_DETECTED", "username": "user1", "original_ip": "10.0.1.31", "current_ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T08:29:12", "event": "SESSION_HIJACK_DETECTED", "username": "user1", "original_ip": "10.0.1.31", "current_ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T08:30:51", "event": "LOGIN_SUCCESS", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T08:30:51", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "개인정보_파기_확인서.docx", "file_id": 4, "owner": "Group002", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T08:30:51", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "모의해킹_시나리오_기획.txt", "file_id": 5, "owner": "Group002", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T08:30:51", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "VPN_접속_허용_리스트.hwp", "file_id": 1, "owner": "Group001", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T08:32:26", "event": "LOGIN_SUCCESS", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T08:32:26", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "암호화_알고리즘_표준_지침.docx", "file_id": 8, "owner": "Group004", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T08:32:26", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "보안_솔루션_도입_예산안.xlsx", "file_id": 3, "owner": "Group001", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T08:32:27", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "VPN_접속_허용_리스트.hwp", "file_id": 1, "owner": "Group001", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T08:32:27", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "악성코드_샘플_분석_노트.txt", "file_id": 7, "owner": "Group003", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T08:32:27", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "모의해킹_시나리오_기획.txt", "file_id": 5, "owner": "Group002", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T08:32:27", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "신규_방화벽_정책_설정안.txt", "file_id": 6, "owner": "Group003", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T08:32:48", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "개인정보_파기_확인서.docx", "file_id": 4, "owner": "Group002", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T08:32:48", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "외부인_출입_신청서_양식.docx", "file_id": 9, "owner": "Group004", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T08:32:48", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "네트워크_장비_목록.xlsx", "file_id": 2, "owner": "Group001", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T08:32:48", "event": "FILE_DOWNLOADED", "username": "user1", "file_name": "주간_보안_위협_동향.txt", "file_id": 10, "owner": "User001", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T08:44:57", "event": "LOGOUT", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T08:45:03", "event": "LOGIN_SUCCESS", "username": "admin", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-12T23:43:07", "event": "LOGIN_SUCCESS", "username": "admin", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-13T00:03:48", "event": "SESSION_HIJACK_DETECTED", "username": "user1", "original_ip": "10.0.1.31", "current_ip": "182.208.176.30"}
+{"timestamp": "2026-05-13T00:03:49", "event": "SESSION_HIJACK_DETECTED", "username": "user1", "original_ip": "10.0.1.31", "current_ip": "182.208.176.30"}
+{"timestamp": "2026-05-13T00:04:15", "event": "LOGIN_SUCCESS", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-13T00:06:32", "event": "LOGOUT", "username": "admin", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-13T00:06:47", "event": "LOGIN_SUCCESS", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-13T00:31:49", "event": "LOGOUT", "username": "user1", "ip": "211.234.227.48"}
+{"timestamp": "2026-05-13T00:32:10", "event": "LOGIN_FAILED", "username": "user1", "ip": "211.234.227.48"}
+{"timestamp": "2026-05-13T00:32:17", "event": "LOGIN_SUCCESS", "username": "user1", "ip": "211.234.227.48"}
+{"timestamp": "2026-05-13T00:39:12", "event": "LOGOUT", "username": "user1", "ip": "182.208.176.30"}
+{"timestamp": "2026-05-13T00:40:32", "event": "SESSION_HIJACK_DETECTED", "username": "user1", "original_ip": "211.234.227.48", "current_ip": "182.208.176.30"}
+{"timestamp": "2026-05-13T00:41:11", "event": "LOGOUT", "username": "user1", "ip": "211.234.226.98"}
+{"timestamp": "2026-05-13T00:41:20", "event": "LOGIN_SUCCESS", "username": "user2", "ip": "211.234.226.98"}
+{"timestamp": "2026-05-13T00:55:09", "event": "SESSION_HIJACK_DETECTED", "username": "user2", "original_ip": "211.234.226.98", "current_ip": "182.208.176.30"}
+{"timestamp": "2026-05-13T00:58:49", "event": "SESSION_HIJACK_DETECTED", "username": "admin", "original_ip": "182.208.176.30", "current_ip": "211.234.226.98"}
+{"timestamp": "2026-05-13T00:58:59", "event": "LOGIN_SUCCESS", "username": "admin", "ip": "211.234.226.98"}
