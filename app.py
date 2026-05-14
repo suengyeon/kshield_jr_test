@@ -358,9 +358,17 @@ def admin_unlock():
 @admin_required
 def admin_logs():
     logs = []
+    page = request.args.get('page', 1, type=int)
+    per_page = 50
+    offset = (page - 1) * per_page
+    total = 0
     try:
-        rows = get_db().execute(
-            "SELECT timestamp, event, username, details FROM audit_logs ORDER BY id DESC LIMIT 100"
+        db = get_db()
+        result = db.execute("SELECT COUNT(*) as cnt FROM audit_logs").fetchone()
+        total = result["cnt"] if result else 0
+        rows = db.execute(
+            "SELECT timestamp, event, username, details FROM audit_logs ORDER BY id DESC LIMIT ? OFFSET ?",
+            (per_page, offset)
         ).fetchall()
         for row in rows:
             entry = {"timestamp": row["timestamp"], "event": row["event"], "username": row["username"]}
@@ -380,7 +388,8 @@ def admin_logs():
                         pass
         except FileNotFoundError:
             pass
-    return render_template("admin_logs.html", logs=logs)
+    total_pages = (total + per_page - 1) // per_page
+    return render_template("admin_logs.html", logs=logs, page=page, total_pages=total_pages, total=total)
 
 
 @app.route("/upload", methods=["POST"])
