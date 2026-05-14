@@ -125,6 +125,26 @@
 
 </div>
 
+<!-- 페이지네이션 -->
+<div style="display:flex; justify-content:center; align-items:center; gap:8px; margin:20px 0; flex-wrap:wrap;">
+  {% if page > 1 %}
+    <a href="?page=1" style="padding:6px 12px; border:1px solid #ccc; border-radius:4px; text-decoration:none; color:#333;">«</a>
+    <a href="?page={{ page - 1 }}" style="padding:6px 12px; border:1px solid #ccc; border-radius:4px; text-decoration:none; color:#333;">‹</a>
+  {% endif %}
+  {% for p in range([1, page-2]|max, [total_pages+1, page+3]|min) %}
+    {% if p == page %}
+      <span style="padding:6px 12px; border:1px solid #2E75B6; border-radius:4px; background:#2E75B6; color:white; font-weight:bold;">{{ p }}</span>
+    {% else %}
+      <a href="?page={{ p }}" style="padding:6px 12px; border:1px solid #ccc; border-radius:4px; text-decoration:none; color:#333;">{{ p }}</a>
+    {% endif %}
+  {% endfor %}
+  {% if page < total_pages %}
+    <a href="?page={{ page + 1 }}" style="padding:6px 12px; border:1px solid #ccc; border-radius:4px; text-decoration:none; color:#333;">›</a>
+    <a href="?page={{ total_pages }}" style="padding:6px 12px; border:1px solid #ccc; border-radius:4px; text-decoration:none; color:#333;">»</a>
+  {% endif %}
+  <span style="color:#888; font-size:13px; margin-left:8px;">총 {{ total }}개 / {{ total_pages }}페이지</span>
+</div>
+
 <script>
     const filterBtns = document.querySelectorAll('.filter-btn');
     const activeFilters = new Set(['ALL']);
@@ -186,5 +206,7 @@
         });
     }
 </script>
+
+
 
 {% endblock %}
