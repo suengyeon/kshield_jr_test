@@ -389,17 +389,38 @@ def admin_users():
 def admin_logs():
     logs = []
     page = request.args.get('page', 1, type=int)
+    filter_type = request.args.get('filter', 'ALL')
     per_page = 50
     offset = (page - 1) * per_page
     total = 0
+
+    filter_map = {
+        'DOWNLOADED': 'FILE_DOWNLOADED',
+        'UPLOAD': 'FILE_UPLOAD',
+        'DELETED': 'DELETED',
+        'SECURITY': 'SECURITY',
+        'ADMIN': 'ADMIN',
+        'LOGIN': 'LOGIN',
+        'SESSION_HIJACK': 'SESSION_HIJACK',
+    }
+
     try:
         db = get_db()
-        result = db.execute("SELECT COUNT(*) as cnt FROM audit_logs").fetchone()
-        total = result["cnt"] if result else 0
-        rows = db.execute(
-            "SELECT timestamp, event, username, details FROM audit_logs ORDER BY id DESC LIMIT ? OFFSET ?",
-            (per_page, offset)
-        ).fetchall()
+        if filter_type != 'ALL' and filter_type in filter_map:
+            keyword = filter_map[filter_type]
+            result = db.execute("SELECT COUNT(*) as cnt FROM audit_logs WHERE event LIKE %s", (f'%{keyword}%',)).fetchone()
+            total = result["cnt"] if result else 0
+            rows = db.execute(
+                "SELECT timestamp, event, username, details FROM audit_logs WHERE event LIKE %s ORDER BY id DESC LIMIT %s OFFSET %s",
+                (f'%{keyword}%', per_page, offset)
+            ).fetchall()
+        else:
+            result = db.execute("SELECT COUNT(*) as cnt FROM audit_logs").fetchone()
+            total = result["cnt"] if result else 0
+            rows = db.execute(
+                "SELECT timestamp, event, username, details FROM audit_logs ORDER BY id DESC LIMIT %s OFFSET %s",
+                (per_page, offset)
+            ).fetchall()
         for row in rows:
             entry = {"timestamp": row["timestamp"], "event": row["event"], "username": row["username"]}
             try:
@@ -419,7 +440,7 @@ def admin_logs():
         except FileNotFoundError:
             pass
     total_pages = (total + per_page - 1) // per_page
-    return render_template("admin_logs.html", logs=logs, page=page, total_pages=total_pages, total=total)
+    return render_template("admin_logs.html", logs=logs, page=page, total_pages=total_pages, total=total, filter_type=filter_type)
 
 
 @app.route("/upload", methods=["POST"])

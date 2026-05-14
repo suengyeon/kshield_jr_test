@@ -147,62 +147,33 @@
 
 <script>
     const filterBtns = document.querySelectorAll('.filter-btn');
-    const activeFilters = new Set(['ALL']);
-    let ipFilter = '';
+    const currentFilter = "{{ filter_type }}";
 
     filterBtns.forEach(btn => {
+        if (btn.dataset.filter === currentFilter) {
+            btn.style.opacity = '1';
+        }
         btn.addEventListener('click', () => {
             const filter = btn.dataset.filter;
-
-            if (filter === 'ALL') {
-                activeFilters.clear();
-                activeFilters.add('ALL');
-                filterBtns.forEach(b => {
-                    b.style.opacity = b.dataset.filter === 'ALL' ? '1' : '0.4';
-                });
-            } else {
-                activeFilters.delete('ALL');
-                document.querySelector('[data-filter="ALL"]').style.opacity = '0.4';
-
-                if (activeFilters.has(filter)) {
-                    activeFilters.delete(filter);
-                    btn.style.opacity = '0.4';
-                } else {
-                    activeFilters.add(filter);
-                    btn.style.opacity = '1';
-                }
-
-                if (activeFilters.size === 0) {
-                    activeFilters.add('ALL');
-                    document.querySelector('[data-filter="ALL"]').style.opacity = '1';
-                }
-            }
-
-            applyFilter();
+            window.location.href = '/admin/logs?page=1&filter=' + filter;
         });
     });
 
+    let ipFilter = '';
     document.getElementById('ip-search').addEventListener('input', function() {
         ipFilter = this.value.trim().toLowerCase();
-        applyFilter();
+        applyIpFilter();
     });
-
     document.getElementById('ip-clear').addEventListener('click', function() {
         document.getElementById('ip-search').value = '';
         ipFilter = '';
-        applyFilter();
+        applyIpFilter();
     });
-
-    function applyFilter() {
+    function applyIpFilter() {
         const rows = document.querySelectorAll('.log-row');
         rows.forEach(row => {
-            const event = row.dataset.event;
             const ip = row.dataset.ip.toLowerCase();
-
-            const eventMatch = activeFilters.has('ALL') || [...activeFilters].some(f => event.includes(f));
-            const ipMatch = ipFilter === '' || ip.includes(ipFilter);
-
-            row.style.display = (eventMatch && ipMatch) ? '' : 'none';
+            row.style.display = (ipFilter === '' || ip.includes(ipFilter)) ? '' : 'none';
         });
     }
 </script>
